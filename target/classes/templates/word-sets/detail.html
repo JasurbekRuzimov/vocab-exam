@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html th:replace="~{layout/base :: layout(~{::main}, ${wordSet.name})}"
+      lang="uz" xmlns:th="http://www.thymeleaf.org">
+<body><main>
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h4 class="fw-bold mb-0" th:text="${wordSet.name}"></h4>
+      <small class="text-muted" th:text="${#lists.size(words)} + ' ta so\'z'"></small>
+    </div>
+    <a th:href="@{/teacher/word-sets}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i>Orqaga</a>
+  </div>
+  <div class="card border-0 shadow-sm">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+      <span class="fw-semibold">So'zlar</span>
+      <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addWordModal">
+        <i class="bi bi-plus"></i> So'z qo'shish
+      </button>
+    </div>
+    <div class="card-body">
+      <div class="row g-2">
+        <div class="col-sm-4 col-md-3" th:each="w : ${words}">
+          <div class="d-flex align-items-center gap-1 border rounded px-2 py-1 bg-light">
+            <span class="flex-grow-1 fw-semibold small" th:text="${w.text}"></span>
+            <button class="btn btn-sm text-danger p-0 border-0 bg-transparent delete-word"
+                    th:data-word-id="${w.id}" th:data-word-set-id="${wordSet.id}">
+              <i class="bi bi-x"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal fade" id="addWordModal" tabindex="-1">
+    <div class="modal-dialog modal-sm"><div class="modal-content">
+      <div class="modal-header"><h6 class="modal-title">So'z qo'shish</h6><button class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body"><input type="text" id="newWordInput" class="form-control" placeholder="so'z kiriting…"></div>
+      <div class="modal-footer">
+        <button class="btn btn-primary btn-sm" id="addWordBtn" th:data-url="@{'/api/word-sets/' + ${wordSet.id} + '/words'}">Qo'shish</button>
+      </div>
+    </div></div>
+  </div>
+  <script>
+    document.getElementById('addWordBtn').addEventListener('click', async () => {
+      const text = document.getElementById('newWordInput').value.trim();
+      if (!text) return;
+      await fetch(document.getElementById('addWordBtn').dataset.url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})});
+      location.reload();
+    });
+    document.querySelectorAll('.delete-word').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('O\'chirish?')) return;
+        const {wordSetId, wordId} = btn.dataset;
+        await fetch('/api/word-sets/'+wordSetId+'/words/'+wordId,{method:'DELETE'});
+        location.reload();
+      });
+    });
+  </script>
+</main></body>
+</html>

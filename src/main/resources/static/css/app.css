@@ -1,0 +1,12 @@
+:root {
+  --brand: #1E3A5F;
+  --brand-light: #2E75B6;
+}
+body { background: #f5f7fa; font-family: 'Segoe UI', sans-serif; }
+.sidebar .nav-link { border-radius: 8px; margin-bottom: 2px; padding: .45rem .75rem; font-size: .875rem; }
+.sidebar .nav-link:hover, .sidebar .nav-link.active { background: rgba(255,255,255,.15); }
+.card { border-radius: 12px; }
+.table th { font-size: .8rem; text-transform: uppercase; letter-spacing: .05em; color: #6c757d; }
+.badge { font-weight: 500; }
+.answer-text { font-size: 1rem; line-height: 1.7; white-space: pre-wrap; word-break: break-word; }
+.error-highlight { background: #ffd0d0; border-radius: 3px; padding: 0 2px; text-decoration: underline wavy red; }

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html th:replace="~{layout/base :: layout(~{::main}, ${group.name})}"
+      lang="uz" xmlns:th="http://www.thymeleaf.org">
+<body><main>
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 class="fw-bold mb-0" th:text="${group.name}"></h4>
+      <small class="text-muted">O'qituvchi: <span th:text="${group.teacher.fullName}"></span></small>
+    </div>
+    <a th:href="@{/admin/groups}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i>Orqaga</a>
+  </div>
+  <div class="card border-0 shadow-sm">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+      <span class="fw-semibold">O'quvchilar (<span th:text="${#sets.size(group.students)}"></span>)</span>
+      <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addStudentModal">
+        <i class="bi bi-person-plus me-1"></i>Qo'shish
+      </button>
+    </div>
+    <div class="table-responsive">
+      <table class="table mb-0 align-middle">
+        <tbody>
+          <tr th:each="s : ${group.students}">
+            <td class="fw-semibold" th:text="${s.fullName}"></td>
+            <td class="text-muted small" th:text="${s.email}"></td>
+            <td class="text-end">
+              <button class="btn btn-sm text-danger p-1 border-0 bg-transparent remove-student"
+                      th:data-student-id="${s.id}" th:data-group-id="${group.id}">
+                <i class="bi bi-person-dash"></i>
+              </button>
+            </td>
+          </tr>
+          <tr th:if="${#sets.isEmpty(group.students)}">
+            <td colspan="3" class="text-center text-muted py-3">O'quvchi yo'q</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="modal fade" id="addStudentModal" tabindex="-1">
+    <div class="modal-dialog"><div class="modal-content">
+      <div class="modal-header"><h6 class="modal-title">O'quvchi qo'shish</h6><button class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <select id="studentSelect" class="form-select" multiple size="8">
+          <option th:each="s : ${students}" th:value="${s.id}" th:text="${s.fullName} + ' (' + ${s.email} + ')'"></option>
+        </select>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary btn-sm" id="addStudentsBtn" th:data-group-id="${group.id}">Qo'shish</button>
+      </div>
+    </div></div>
+  </div>
+  <script>
+    document.getElementById('addStudentsBtn').addEventListener('click', async () => {
+      const gid = document.getElementById('addStudentsBtn').dataset.groupId;
+      const ids = [...document.getElementById('studentSelect').selectedOptions].map(o => o.value);
+      if (!ids.length) return;
+      await fetch('/api/groups/'+gid+'/students',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({studentIds:ids})});
+      location.reload();
+    });
+    document.querySelectorAll('.remove-student').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('O\'chirish?')) return;
+        const {groupId, studentId} = btn.dataset;
+        await fetch('/api/groups/'+groupId+'/students/'+studentId,{method:'DELETE'});
+        location.reload();
+      });
+    });
+  </script>
+</main></body>
+</html>

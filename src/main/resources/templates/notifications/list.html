@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html th:replace="~{layout/base :: layout(~{::main}, 'Bildirishnomalar')}"
+      lang="uz" xmlns:th="http://www.thymeleaf.org">
+<body><main>
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold mb-0">Bildirishnomalar</h4>
+    <button class="btn btn-outline-secondary btn-sm" onclick="markAll()">Hammasini o'qildi</button>
+  </div>
+  <div id="notifList"><div class="text-center py-4 text-muted"><span class="spinner-border spinner-border-sm me-2"></span>Yuklanmoqda…</div></div>
+  <script>
+    async function load() {
+      const res = await fetch('/api/notifications');
+      const data = await res.json();
+      const div = document.getElementById('notifList');
+      if (!data.items?.length) { div.innerHTML='<p class="text-muted text-center py-4">Bildirishnoma yo\'q</p>'; return; }
+      div.innerHTML = data.items.map(n => `
+        <div class="card border-0 shadow-sm mb-2 ${n.read ? '' : 'border-start border-primary border-3'}" id="notif-${n.id}">
+          <div class="card-body py-2 d-flex align-items-start gap-3">
+            <i class="bi bi-bell${n.read ? '' : '-fill'} text-primary mt-1"></i>
+            <div class="flex-grow-1"><div class="${n.read ? 'text-muted' : 'fw-semibold'}">${n.message}</div></div>
+            ${!n.read ? `<button class="btn btn-sm btn-outline-secondary py-0" onclick="markOne('${n.id}')">O'qildi</button>` : ''}
+          </div>
+        </div>`).join('');
+    }
+    async function markOne(id) { await fetch('/api/notifications/'+id+'/read',{method:'PATCH'}); load(); }
+    async function markAll() { await fetch('/api/notifications/read-all',{method:'PATCH'}); load(); }
+    load();
+  </script>
+</main></body>
+</html>

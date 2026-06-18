@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html th:replace="~{layout/base :: layout(~{::main}, ${exam.title})}"
+      lang="uz" xmlns:th="http://www.thymeleaf.org">
+<body><main>
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h4 class="fw-bold mb-0" th:text="${exam.title}"></h4>
+      <span class="badge" th:classappend="${exam.type.name() == 'PDF'} ? 'bg-warning text-dark' : 'bg-info text-dark'" th:text="${exam.type}"></span>
+      <small class="text-muted ms-2" th:text="${exam.questionCount} + ' savol'"></small>
+    </div>
+    <a th:href="@{/teacher/exams}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i>Orqaga</a>
+  </div>
+  <div th:if="${exam.type.name() == 'PDF'}" class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white fw-semibold d-flex justify-content-between">
+      <span>PDF Variantlar</span>
+      <a th:href="@{'/api/exams/' + ${exam.id} + '/download-zip'}" class="btn btn-sm btn-outline-primary py-0">
+        <i class="bi bi-download me-1"></i>Hammasini ZIP
+      </a>
+    </div>
+    <div class="card-body">
+      <div class="d-flex flex-wrap gap-2">
+        <a th:each="v : ${variants}"
+           th:href="@{'/api/exams/' + ${exam.id} + '/variants/' + ${v.id} + '/pdf'}"
+           class="btn btn-outline-danger btn-sm" target="_blank">
+          <i class="bi bi-file-pdf me-1"></i>Variant <span th:text="${v.variantNumber}"></span>
+        </a>
+      </div>
+    </div>
+  </div>
+  <div class="card border-0 shadow-sm">
+    <div class="card-header bg-white fw-semibold">Imtihon topshirish</div>
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-sm-3"><select id="targetType" class="form-select form-select-sm"><option value="GROUP">Guruhga</option><option value="STUDENT">O'quvchiga</option></select></div>
+        <div class="col-sm-4"><select id="targetId" class="form-select form-select-sm"><option value="">— tanlang —</option></select></div>
+        <div class="col-sm-4"><input type="datetime-local" id="deadline" class="form-control form-control-sm"></div>
+        <div class="col-12">
+          <button id="assignBtn" class="btn btn-primary btn-sm" th:data-exam-id="${exam.id}">
+            <i class="bi bi-send me-1"></i>Topshirish
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- exams/detail.html da, "Imtihon topshirish" cardidan keyin -->
+    <div class="card border-0 shadow-sm mt-4" th:if="${!#lists.isEmpty(assignments)}">
+      <div class="card-header bg-white fw-semibold">Topshirishlar</div>
+      <div class="table-responsive">
+        <table class="table mb-0 align-middle">
+          <thead class="table-light">
+          <tr><th>Guruh/O'quvchi</th><th>Muddat</th><th>Holat</th><th></th></tr>
+          </thead>
+          <tbody>
+          <tr th:each="a : ${assignments}" th:if="${a.exam.id == exam.id}">
+            <td th:text="${a.targetType == T(uz.vocabexam.entity.TargetType).GROUP ? a.group?.name : a.student?.fullName}"></td>
+            <td class="small text-muted" th:text="${a.deadline != null ? #temporals.format(a.deadline,'dd.MM.yyyy HH:mm') : 'Belgilanmagan'}"></td>
+            <td><span class="badge" th:classappend="${a.status.name() == 'ACTIVE'} ? 'bg-success' : 'bg-secondary'" th:text="${a.status}"></span></td>
+            <td>
+              <a th:href="@{'/teacher/exams/' + ${a.id} + '/submissions'}"
+                 class="btn btn-sm btn-outline-primary py-0">
+                <i class="bi bi-people me-1"></i>Topshirishlar
+              </a>
+            </td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <script th:inline="javascript">
+    const examId = /*[[${exam.id}]]*/ '';
+    let groups = [], students = [];
+    async function loadTargets() {
+      const [gR, sR] = await Promise.all([fetch('/api/groups'), fetch('/api/users?role=STUDENT&size=200')]);
+      groups = (await gR.json()) || [];
+      const sd = await sR.json(); students = sd.content || sd || [];
+      updateSelect();
+    }
+    function updateSelect() {
+      const type = document.getElementById('targetType').value;
+      const sel = document.getElementById('targetId');
+      sel.innerHTML = '<option value="">— tanlang —</option>';
+      (type === 'GROUP' ? groups : students).forEach(item => {
+        const opt = document.createElement('option');
+        opt.value = item.id; opt.text = item.name || item.fullName; sel.appendChild(opt);
+      });
+    }
+    document.getElementById('targetType').addEventListener('change', updateSelect);
+    document.getElementById('assignBtn').addEventListener('click', async () => {
+      const targetType = document.getElementById('targetType').value;
+      const targetId = document.getElementById('targetId').value;
+      const deadline = document.getElementById('deadline').value;
+      if (!targetId) { alert('Guruh yoki o\'quvchini tanlang'); return; }
+      const res = await fetch('/api/assignments',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({examId,targetType,targetId,deadline:deadline||null})});
+      if (res.ok) alert('Imtihon muvaffaqiyatli topshirildi!');
+      else { const d = await res.json(); alert(d.message); }
+    });
+    loadTargets();
+  </script>
+</main></body>
+</html>

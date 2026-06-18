@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html th:replace="~{layout/base :: layout(~{::main}, 'Imtihon yaratish')}"
+      lang="uz" xmlns:th="http://www.thymeleaf.org">
+<body><main>
+  <div class="row justify-content-center">
+    <div class="col-lg-7">
+      <div class="card border-0 shadow-sm p-4">
+        <h5 class="fw-bold mb-4">Yangi imtihon yaratish</h5>
+        <div id="createError" class="alert alert-danger d-none small py-2"></div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Sarlavha *</label>
+          <input type="text" id="title" class="form-control" placeholder="Masalan: Unit 7 Vocabulary Test" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Tur *</label>
+          <div class="d-flex gap-3">
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="examType" id="typePdf" value="PDF" checked>
+              <label class="form-check-label" for="typePdf"><i class="bi bi-file-pdf text-danger me-1"></i>PDF</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="examType" id="typeOnline" value="ONLINE">
+              <label class="form-check-label" for="typeOnline"><i class="bi bi-laptop text-primary me-1"></i>Online</label>
+            </div>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">So'zlar to'plami *</label>
+          <select id="wordSetId" class="form-select" required>
+            <option value="">— tanlang —</option>
+            <option th:each="ws : ${wordSets}" th:value="${ws.id}"
+                    th:text="${ws.name} + ' (' + ${#lists.size(ws.words)} + ' so\'z)'"
+                    th:data-count="${#lists.size(ws.words)}"></option>
+          </select>
+        </div>
+        <div class="row g-3 mb-4">
+          <div class="col-6">
+            <label class="form-label fw-semibold">Savollar soni *</label>
+            <input type="number" id="questionCount" class="form-control" min="5" max="100" value="10">
+          </div>
+          <div class="col-6" id="variantGroup">
+            <label class="form-label fw-semibold">Variantlar soni</label>
+            <input type="number" id="variantCount" class="form-control" min="1" max="10" value="1">
+          </div>
+        </div>
+        <div class="d-flex gap-2">
+          <button id="createBtn" class="btn btn-primary"><i class="bi bi-magic me-1"></i>Yaratish</button>
+          <a th:href="@{/teacher/exams}" class="btn btn-outline-secondary">Bekor qilish</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    document.querySelectorAll('[name=examType]').forEach(r => r.addEventListener('change', () => {
+      document.getElementById('variantGroup').style.display = r.value === 'ONLINE' ? 'none' : '';
+    }));
+    document.getElementById('createBtn').addEventListener('click', async () => {
+      const title = document.getElementById('title').value.trim();
+      const type  = document.querySelector('[name=examType]:checked').value;
+      const wordSetId = document.getElementById('wordSetId').value;
+      const questionCount = +document.getElementById('questionCount').value;
+      const variantCount  = +document.getElementById('variantCount').value;
+      const errDiv = document.getElementById('createError');
+      errDiv.classList.add('d-none');
+      if (!title || !wordSetId) { errDiv.textContent = 'Barcha maydonlarni to\'ldiring'; errDiv.classList.remove('d-none'); return; }
+      const btn = document.getElementById('createBtn');
+      btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Generatsiya…';
+      try {
+        const res = await fetch('/api/exams',{method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({title,type,wordSetId,questionCount,variantCount})});
+        const data = await res.json();
+        if (res.ok) window.location.href = '/teacher/exams/' + data.id;
+        else { errDiv.textContent = data.message || 'Xato'; errDiv.classList.remove('d-none'); }
+      } catch(e) { errDiv.textContent = 'Server bilan aloqa yo\'q'; errDiv.classList.remove('d-none'); }
+      finally { btn.disabled = false; btn.innerHTML = '<i class="bi bi-magic me-1"></i>Yaratish'; }
+    });
+  </script>
+</main></body>
+</html>

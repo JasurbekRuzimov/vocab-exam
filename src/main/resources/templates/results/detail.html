@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html th:replace="~{layout/base :: layout(~{::main}, 'Natija')}"
+      lang="uz" xmlns:th="http://www.thymeleaf.org">
+<body><main>
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h5 class="fw-bold mb-0" th:text="${result.assignment.exam.title}"></h5>
+    <a th:href="@{/student/results}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i>Orqaga</a>
+  </div>
+  <div class="row g-3">
+    <div class="col-sm-4">
+      <div class="card border-0 shadow-sm text-center p-4">
+        <div class="display-4 fw-bold text-primary" th:text="${result.totalScore}"></div>
+        <div class="text-muted">/ <span th:text="${result.maxScore}"></span> ball</div>
+      </div>
+    </div>
+    <div class="col-sm-8">
+      <div class="card border-0 shadow-sm p-3 h-100">
+        <div class="fw-semibold mb-2">O'qituvchi izohi:</div>
+        <p class="text-muted mb-0" th:text="${result.comment ?: 'Izoh qoldirilmagan'}"></p>
+        <small class="text-muted mt-3 d-block" th:text="'Tekshirildi: ' + ${#temporals.format(result.checkedAt,'dd.MM.yyyy HH:mm')}"></small>
+      </div>
+    </div>
+  </div>
+</main></body>
+</html>

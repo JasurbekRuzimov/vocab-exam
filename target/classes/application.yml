@@ -1,0 +1,43 @@
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/vocab_exam}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:Jasurbek_2105}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
+
+  thymeleaf:
+    cache: false
+    prefix: classpath:/templates/
+    suffix: .html
+
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    session:
+      timeout: 30m
+
+app:
+  upload-dir: ${UPLOAD_DIR:uploads}
+  pdf-dir: ${PDF_DIR:pdfs}
+  school-name: ${SCHOOL_NAME:VocabExam O'quv Markazi}
+  max-login-attempts: 5
+  lockout-minutes: 15
