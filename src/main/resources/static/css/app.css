@@ -18,3 +18,9 @@ body { background: #f5f7fa; font-family: 'Segoe UI', sans-serif; }
 .tok.sel { background: #fff3a8; outline: 2px solid #f0c000; }
 .error-highlight { cursor: help; text-underline-offset: 3px; }
 .err-cat { font-size: .7rem; }
+
+/* Markaz rangi tugmalar va havolalarda ham ishlatiladi */
+.btn-primary { --bs-btn-bg: var(--brand); --bs-btn-border-color: var(--brand);
+  --bs-btn-hover-bg: var(--brand); --bs-btn-hover-border-color: var(--brand); filter: saturate(1.05); }
+.btn-primary:hover { filter: brightness(1.1); }
+.text-primary { color: var(--brand) !important; }

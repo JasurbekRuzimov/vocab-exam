@@ -53,6 +53,8 @@ public class AssignmentService {
         } else {
             User student = userRepository.findById(targetId).orElseThrow(() -> new ResourceNotFoundException("Student topilmadi"));
             if (student.getRole() != Role.STUDENT) throw new BadRequestException("Tanlangan foydalanuvchi o'quvchi emas");
+            if (!Objects.equals(student.getCenterId(), exam.getTeacher().getCenterId()))
+                throw new AccessForbiddenException("O'quvchi boshqa markazda");
             ExamAssignment a = assignmentRepository.save(ExamAssignment.builder()
                 .exam(exam).targetType(TargetType.STUDENT).student(student).deadline(deadline).build());
             created.add(a);

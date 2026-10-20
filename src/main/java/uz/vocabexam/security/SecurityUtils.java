@@ -23,6 +23,23 @@ public class SecurityUtils {
     public static boolean isAdmin()   { return hasRole(Role.SUPER_ADMIN); }
     public static boolean isTeacher() { return hasRole(Role.TEACHER); }
     public static boolean isStudent() { return hasRole(Role.STUDENT); }
+    public static boolean isCenterAdmin() { return hasRole(Role.CENTER_ADMIN); }
+
+    /** Joriy foydalanuvchining markazi (platforma adminida null). */
+    public static UUID currentCenterId() {
+        CustomUserDetails ud = currentUser();
+        return ud != null ? ud.getCenterId() : null;
+    }
+
+    /**
+     * Platforma admini hamma markazga kira oladi; boshqalar faqat o'z markaziga.
+     * Boshqa markaz ma'lumotiga murojaat — 403.
+     */
+    public static void assertSameCenter(UUID centerId) {
+        if (isAdmin()) return;
+        UUID mine = currentCenterId();
+        if (mine == null || !mine.equals(centerId)) throw new AccessForbiddenException("Bu boshqa markaz ma'lumoti");
+    }
 
     /** Joriy foydalanuvchi resurs egasi yoki SUPER_ADMIN bo'lmasa — 403. */
     public static void assertOwnerOrAdmin(UUID ownerId) {

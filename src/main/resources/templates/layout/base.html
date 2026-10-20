@@ -31,20 +31,27 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
   <link th:href="@{/css/app.css}" rel="stylesheet">
 </head>
-<body>
+<!-- Markaz brendi: rang (#RRGGBB, serverda tekshiriladi), nomi va logotipi -->
+<body th:style="${currentCenter != null} ? '--brand:' + ${currentCenter.primaryColor} : null">
 <div class="d-flex" id="wrapper">
 
   <nav class="d-flex flex-column flex-shrink-0 p-3 text-white"
-       style="width:250px;min-height:100vh;background:#1E3A5F">
+       style="width:250px;min-height:100vh;background:var(--brand)">
     <a th:href="@{/}" class="d-flex align-items-center mb-3 text-white text-decoration-none">
-      <i class="bi bi-mortarboard-fill fs-4 me-2"></i>
-      <span class="fs-5 fw-bold">VocabExam</span>
+      <img th:if="${currentCenter?.logoUrl}" th:src="${currentCenter.logoUrl}" alt=""
+           class="me-2 rounded bg-white p-1" style="height:32px;max-width:64px;object-fit:contain">
+      <i th:unless="${currentCenter?.logoUrl}" class="bi bi-mortarboard-fill fs-4 me-2"></i>
+      <span class="fs-5 fw-bold text-truncate" th:text="${currentCenter?.name ?: 'VocabExam'}">VocabExam</span>
     </a>
     <hr class="border-secondary">
     <ul class="nav nav-pills flex-column mb-auto gap-1">
       <li><a th:href="@{/}" class="nav-link text-white"><i class="bi bi-speedometer2 me-2"></i>Bosh sahifa</a></li>
       <th:block sec:authorize="hasRole('SUPER_ADMIN')">
-        <li class="mt-2"><small class="text-secondary text-uppercase px-2" style="font-size:.7rem">Admin</small></li>
+        <li class="mt-2"><small class="text-secondary text-uppercase px-2" style="font-size:.7rem">Platforma</small></li>
+        <li><a th:href="@{/admin/centers}" class="nav-link text-white"><i class="bi bi-buildings me-2"></i>Markazlar</a></li>
+      </th:block>
+      <th:block sec:authorize="hasAnyRole('SUPER_ADMIN','CENTER_ADMIN')">
+        <li class="mt-2"><small class="text-secondary text-uppercase px-2" style="font-size:.7rem">Markaz</small></li>
         <li><a th:href="@{/admin/users}"  class="nav-link text-white"><i class="bi bi-people me-2"></i>Foydalanuvchilar</a></li>
         <li><a th:href="@{/admin/groups}" class="nav-link text-white"><i class="bi bi-diagram-3 me-2"></i>Guruhlar</a></li>
       </th:block>

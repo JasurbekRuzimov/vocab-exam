@@ -20,6 +20,8 @@ public class DashboardController {
         model.addAttribute("unreadCount", notificationService.unreadCount(userId));
         if (SecurityUtils.isTeacher() || SecurityUtils.isAdmin())
             model.addAttribute("pendingChecks", monitorService.getPendingChecks(userId));
+        if (SecurityUtils.isCenterAdmin() && SecurityUtils.currentCenterId() != null)
+            model.addAttribute("centerSummary", analyticsService.getCenterSummary(SecurityUtils.currentCenterId()));
         if (SecurityUtils.isAdmin()) {
             model.addAttribute("stats", analyticsService.getSystemSummary());
         } else if (SecurityUtils.isStudent()) {

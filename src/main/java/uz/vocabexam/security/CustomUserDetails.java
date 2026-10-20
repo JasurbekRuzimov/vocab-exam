@@ -17,6 +17,8 @@ public class CustomUserDetails implements UserDetails {
     private final String email;
     private final String password;
     private final String role;
+    /** Foydalanuvchi markazi (platforma adminida null). */
+    private final UUID centerId;
     private final boolean active;
     private final boolean locked;
     private final Collection<? extends GrantedAuthority> authorities;
@@ -28,7 +30,9 @@ public class CustomUserDetails implements UserDetails {
         this.email    = user.getEmail();
         this.password = user.getPasswordHash();
         this.role     = user.getRole().name();
-        this.active   = user.isActive();
+        this.centerId = user.getCenterId();
+        // Markaz o'chirilgan bo'lsa (masalan obuna tugagan), uning foydalanuvchilari kira olmaydi
+        this.active   = user.isActive() && (user.getCenter() == null || user.getCenter().isActive());
         this.locked   = user.isLocked();
         this.authorities = List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()));
     }
