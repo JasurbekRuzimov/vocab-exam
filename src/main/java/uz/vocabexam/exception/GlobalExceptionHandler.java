@@ -36,6 +36,11 @@ public class GlobalExceptionHandler {
         return response(HttpStatus.CONFLICT, "Bu yozuvga boshqa ma'lumotlar bog'langan. Avval ularni o'chiring.");
     }
 
+    @ExceptionHandler(org.springframework.web.servlet.resource.NoResourceFoundException.class)
+    public ResponseEntity<Map<String,Object>> noResource(org.springframework.web.servlet.resource.NoResourceFoundException ex) {
+        return response(HttpStatus.NOT_FOUND, "Sahifa topilmadi");
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String,Object>> general(Exception ex) {
         // Ichki xato tafsilotlari foydalanuvchiga ko'rsatilmaydi, faqat logga yoziladi

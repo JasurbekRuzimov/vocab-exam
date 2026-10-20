@@ -2,6 +2,7 @@ package uz.vocabexam.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import uz.vocabexam.entity.*;
 import uz.vocabexam.repository.*;
 import java.util.*;
@@ -30,6 +31,20 @@ public class NotificationService {
             if (n.getUser().getId().equals(userId)) { n.setRead(true); notificationRepository.save(n); }
         });
     }
+    /**
+     * Bildirishnomani o'qilgan deb belgilaydi va uning havolasini qaytaradi.
+     * Faqat sayt ichidagi havolaga o'tkazamiz; boshqasi bo'lsa ro'yxatda qolamiz.
+     */
+    @Transactional
+    public String open(UUID notifId, UUID userId) {
+        markRead(notifId, userId);
+        return notificationRepository.findById(notifId)
+            .filter(n -> n.getUser().getId().equals(userId))
+            .map(Notification::getLink)
+            .filter(l -> l != null && l.startsWith("/") && !l.startsWith("//"))
+            .orElse("/notifications");
+    }
+    @Transactional
     public void markAllRead(UUID userId) {
         notificationRepository.markAllReadByUserId(userId);
     }
