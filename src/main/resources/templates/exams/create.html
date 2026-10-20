@@ -33,6 +33,28 @@
                     th:data-count="${#lists.size(ws.words)}"></option>
           </select>
         </div>
+        <div class="mb-3" id="questionTypesGroup" style="display:none">
+          <label class="form-label fw-semibold">Savol turlari *</label>
+          <div class="form-text mb-2">Bir nechtasini tanlasangiz, savollar aralash beriladi. Tarjima va test avtomatik baholanadi.</div>
+          <div class="row g-2">
+            <div class="col-sm-6"><div class="form-check">
+              <input class="form-check-input qtype" type="checkbox" value="MULTIPLE_CHOICE" id="qtMc" checked>
+              <label class="form-check-label" for="qtMc">Test (4 variant) <span class="badge bg-success-subtle text-success">avto</span></label>
+            </div></div>
+            <div class="col-sm-6"><div class="form-check">
+              <input class="form-check-input qtype" type="checkbox" value="TRANSLATE_EN_UZ" id="qtEnUz" checked>
+              <label class="form-check-label" for="qtEnUz">Tarjima EN → UZ <span class="badge bg-success-subtle text-success">avto</span></label>
+            </div></div>
+            <div class="col-sm-6"><div class="form-check">
+              <input class="form-check-input qtype" type="checkbox" value="TRANSLATE_UZ_EN" id="qtUzEn">
+              <label class="form-check-label" for="qtUzEn">Tarjima UZ → EN <span class="badge bg-success-subtle text-success">avto</span></label>
+            </div></div>
+            <div class="col-sm-6"><div class="form-check">
+              <input class="form-check-input qtype" type="checkbox" value="SENTENCE" id="qtSentence">
+              <label class="form-check-label" for="qtSentence">Gap tuzish <span class="badge bg-secondary-subtle text-secondary">o'qituvchi</span></label>
+            </div></div>
+          </div>
+        </div>
         <div class="row g-3 mb-4">
           <div class="col-6">
             <label class="form-label fw-semibold">Savollar soni *</label>
@@ -53,6 +75,7 @@
   <script>
     document.querySelectorAll('[name=examType]').forEach(r => r.addEventListener('change', () => {
       document.getElementById('variantGroup').style.display = r.value === 'ONLINE' ? 'none' : '';
+      document.getElementById('questionTypesGroup').style.display = r.value === 'ONLINE' ? '' : 'none';
     }));
     document.getElementById('createBtn').addEventListener('click', async () => {
       const title = document.getElementById('title').value.trim();
@@ -60,14 +83,16 @@
       const wordSetId = document.getElementById('wordSetId').value;
       const questionCount = +document.getElementById('questionCount').value;
       const variantCount  = +document.getElementById('variantCount').value;
+      const questionTypes = [...document.querySelectorAll('.qtype:checked')].map(c => c.value);
       const errDiv = document.getElementById('createError');
       errDiv.classList.add('d-none');
       if (!title || !wordSetId) { errDiv.textContent = 'Barcha maydonlarni to\'ldiring'; errDiv.classList.remove('d-none'); return; }
+      if (type === 'ONLINE' && !questionTypes.length) { errDiv.textContent = 'Kamida bitta savol turini tanlang'; errDiv.classList.remove('d-none'); return; }
       const btn = document.getElementById('createBtn');
       btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Generatsiya…';
       try {
         const res = await fetch('/api/exams',{method:'POST',headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({title,type,wordSetId,questionCount,variantCount})});
+          body:JSON.stringify({title,type,wordSetId,questionCount,variantCount,questionTypes})});
         const data = await res.json();
         if (res.ok) window.location.href = '/teacher/exams/' + data.id;
         else { errDiv.textContent = data.message || 'Xato'; errDiv.classList.remove('d-none'); }

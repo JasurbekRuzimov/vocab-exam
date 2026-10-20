@@ -23,14 +23,19 @@ public class OnlineExamApiController {
     public ResponseEntity<?> start(@PathVariable UUID assignmentId) {
         UUID studentId = SecurityUtils.currentUserId();
         ExamAssignment a = onlineExamService.getAssignmentForStudent(assignmentId, studentId);
-        List<Word> words = onlineExamService.getExamWords(a, studentId);
+        List<uz.vocabexam.service.ExamQuestion> questions = onlineExamService.getQuestions(a, studentId);
         List<OnlineAnswer> savedAnswers = onlineExamService.getStudentAnswers(assignmentId, studentId);
         Map<UUID, String> savedMap = new HashMap<>();
         savedAnswers.forEach(ans -> savedMap.put(ans.getWord().getId(), ans.getAnswerText()));
-        List<Map<String,Object>> wordList = words.stream().map(w -> {
+        // To'g'ri javob (expected) bu yerda yuborilmaydi; UZ → EN savolida inglizcha so'z ham ko'rsatilmaydi
+        List<Map<String,Object>> wordList = questions.stream().map(q -> {
             Map<String,Object> m = new LinkedHashMap<>();
-            m.put("id", w.getId()); m.put("text", w.getText());
-            m.put("savedAnswer", savedMap.get(w.getId()));
+            m.put("id", q.word().getId());
+            m.put("text", q.prompt());
+            m.put("type", q.type());
+            m.put("instruction", q.instruction());
+            m.put("options", q.options());
+            m.put("savedAnswer", savedMap.get(q.word().getId()));
             return m;
         }).toList();
         // LinkedHashMap: deadline null bo'lishi mumkin (Map.of null qabul qilmaydi)
@@ -39,7 +44,7 @@ public class OnlineExamApiController {
         body.put("examTitle", a.getExam().getTitle());
         body.put("deadline", a.getDeadline());
         body.put("words", wordList);
-        body.put("totalWords", words.size());
+        body.put("totalWords", questions.size());
         body.put("submitted", onlineExamService.hasSubmitted(assignmentId, studentId));
         return ResponseEntity.ok(body);
     }

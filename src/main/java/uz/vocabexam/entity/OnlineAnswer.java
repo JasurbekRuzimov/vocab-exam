@@ -1,5 +1,6 @@
 package uz.vocabexam.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
@@ -29,6 +30,15 @@ public class OnlineAnswer {
     @Column(name = "answer_text", columnDefinition = "TEXT")
     private String answerText;
 
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    @Column(name = "question_type", nullable = false, length = 30)
+    private QuestionType questionType = QuestionType.SENTENCE;
+
+    /** Avtomatik baholanadigan savollar uchun: to'g'ri/noto'g'ri. Gap tuzishda null. */
+    @Column(name = "is_correct")
+    private Boolean correct;
+
     @Column
     private Integer score;
 
@@ -42,6 +52,22 @@ public class OnlineAnswer {
     @Builder.Default
     @Column(name = "saved_at", nullable = false)
     private LocalDateTime savedAt = LocalDateTime.now();
+
+    /** To'g'ri javob (gap tuzishda null) — topshirilgandan keyin o'qituvchi va o'quvchiga ko'rsatiladi. */
+    @JsonIgnore
+    public String getExpectedAnswer() {
+        return switch (questionType) {
+            case SENTENCE -> null;
+            case TRANSLATE_UZ_EN -> word.getText();
+            case TRANSLATE_EN_UZ, MULTIPLE_CHOICE -> word.getTranslation();
+        };
+    }
+
+    /** Savolda o'quvchiga ko'rsatilgan matn. */
+    @JsonIgnore
+    public String getPrompt() {
+        return questionType == QuestionType.TRANSLATE_UZ_EN ? word.getTranslation() : word.getText();
+    }
 
     @Builder.Default
     @OneToMany(mappedBy = "answer", cascade = CascadeType.ALL, orphanRemoval = true)

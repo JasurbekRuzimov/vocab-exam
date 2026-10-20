@@ -33,9 +33,19 @@ public class ExamApiController {
             UUID.fromString((String) body.get("wordSetId")),
             teacherId,
             (Integer) body.get("questionCount"),
-            body.containsKey("variantCount") ? (Integer) body.get("variantCount") : 1
+            body.containsKey("variantCount") ? (Integer) body.get("variantCount") : 1,
+            parseQuestionTypes(body.get("questionTypes"))
         );
         return ResponseEntity.status(HttpStatus.CREATED).body(exam);
+    }
+
+    private static List<QuestionType> parseQuestionTypes(Object raw) {
+        if (!(raw instanceof List<?> list)) return List.of();
+        try {
+            return list.stream().map(o -> QuestionType.valueOf(String.valueOf(o))).toList();
+        } catch (IllegalArgumentException e) {
+            throw new uz.vocabexam.exception.BadRequestException("Noma'lum savol turi");
+        }
     }
 
     @GetMapping("/{id}")

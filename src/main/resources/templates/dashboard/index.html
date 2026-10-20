@@ -6,7 +6,7 @@
 <main>
   <h4 class="fw-bold mb-4">Xush kelibsiz! <span sec:authentication="name"></span></h4>
 
-  <sec:authorize access="hasRole('SUPER_ADMIN')">
+  <th:block sec:authorize="hasRole('SUPER_ADMIN')">
     <div class="row g-3 mb-4">
       <div class="col-sm-6 col-lg-3">
         <div class="card border-0 shadow-sm text-center p-3">
@@ -37,9 +37,9 @@
         </div>
       </div>
     </div>
-  </sec:authorize>
+  </th:block>
 
-  <sec:authorize access="hasRole('STUDENT')">
+  <th:block sec:authorize="hasRole('STUDENT')">
     <div class="row g-3 mb-4">
       <div class="col-sm-4">
         <div class="card border-0 shadow-sm text-center p-3">
@@ -62,9 +62,9 @@
         </a>
       </div>
     </div>
-  </sec:authorize>
+  </th:block>
 
-  <sec:authorize access="hasAnyRole('TEACHER','SUPER_ADMIN')">
+  <th:block sec:authorize="hasAnyRole('TEACHER','SUPER_ADMIN')">
     <h6 class="text-muted mb-3">Tezkor harakatlar</h6>
     <div class="row g-3">
       <div class="col-sm-4">
@@ -86,7 +86,7 @@
         </a>
       </div>
     </div>
-  </sec:authorize>
+  </th:block>
 </main>
 </body>
 </html>

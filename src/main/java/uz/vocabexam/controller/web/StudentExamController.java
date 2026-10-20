@@ -44,7 +44,7 @@ public class StudentExamController {
             });
 
         model.addAttribute("assignment", a);
-        model.addAttribute("words", onlineExamService.getExamWords(a, studentId));
+        model.addAttribute("questions", onlineExamService.getQuestions(a, studentId));
         model.addAttribute("submitted", onlineExamService.hasSubmitted(assignmentId, studentId));
         model.addAttribute("savedAnswersMap", savedAnswersMap);
         return "online-exam/take";
@@ -65,6 +65,9 @@ public class StudentExamController {
         if (!result.getStudent().getId().equals(SecurityUtils.currentUserId()))
             throw new AccessForbiddenException("Ruxsat yo'q");
         model.addAttribute("result", result);
+        // Shaffoflik: har savol bo'yicha javob, to'g'ri javob va ball
+        model.addAttribute("answers", onlineExamService.getStudentAnswersForCheck(
+            result.getAssignment().getId(), result.getStudent().getId()));
         return "results/detail";
     }
 }

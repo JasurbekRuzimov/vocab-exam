@@ -50,8 +50,12 @@ public class ExamWebController {
     @GetMapping("/{assignmentId}/submissions/{studentId}/check")
     public String check(@PathVariable UUID assignmentId, @PathVariable UUID studentId, Model model) {
         model.addAttribute("assignment", assignmentService.getOwned(assignmentId));
-        model.addAttribute("answers",    onlineExamService.getStudentAnswersForCheck(assignmentId, studentId));
+        var answers = onlineExamService.getStudentAnswersForCheck(assignmentId, studentId);
+        model.addAttribute("answers",    answers);
         model.addAttribute("studentId",  studentId);
+        // Jami ballni oldindan hisoblab beramiz: avtomatik + o'qituvchi qo'ygan ballar
+        model.addAttribute("scoreSum", answers.stream().mapToInt(x -> x.getScore() == null ? 0 : x.getScore()).sum());
+        model.addAttribute("scoreMax", answers.size() * AnswerCheckService.MAX_ANSWER_SCORE);
         return "online-exam/check";
     }
 }
