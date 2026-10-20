@@ -17,6 +17,7 @@ public interface UserRepository extends JpaRepository<User, UUID>,
     List<User> findByRole(Role role);
     Page<User> findByRole(Role role, Pageable pageable);
     long countByCenter_IdAndRole(UUID centerId, Role role);
+    long countByCenter_Id(UUID centerId);
     /** Markazlar ro'yxati uchun: [markaz id, rol, soni]. */
     @Query("SELECT u.center.id, u.role, COUNT(u) FROM User u WHERE u.center IS NOT NULL GROUP BY u.center.id, u.role")
     List<Object[]> countByCenterAndRole();

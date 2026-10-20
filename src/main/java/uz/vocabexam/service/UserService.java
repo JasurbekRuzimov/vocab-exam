@@ -21,6 +21,10 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final CenterRepository centerRepository;
+    private final GroupRepository groupRepository;
+    private final ExamRepository examRepository;
+    private final WordSetRepository wordSetRepository;
+    private final DataCleanupService cleanupService;
 
     public Page<User> getAll(Role role, String search, Pageable pageable) {
         return getAll(role, search, null, pageable);
@@ -169,7 +173,20 @@ public class UserService {
     }
 
     @Transactional
-    public void delete(UUID id) { userRepository.delete(getManaged(id)); }
+    public void delete(UUID id) {
+        User u = getManaged(id);
+        if (u.getId().equals(SecurityUtils.currentUserId()))
+            throw new BadRequestException("O'zingizni o'chira olmaysiz");
+        // O'qituvchining guruh va imtihonlari o'z-o'zidan o'chib ketmasin: avval ularni hal qilish kerak
+        long groups = groupRepository.countByTeacherId(id), exams = examRepository.countByTeacherId(id);
+        if (groups > 0 || exams > 0)
+            throw new BadRequestException(u.getFullName() + "ga " + groups + " ta guruh va " + exams
+                + " ta imtihon bog'langan. Avval guruhlarni boshqa o'qituvchiga o'tkazing va imtihonlarni o'chiring"
+                + " yoki foydalanuvchini bloklang.");
+        cleanupService.purgeUserData(id);
+        wordSetRepository.deleteAll(wordSetRepository.findByTeacherIdOrderByCreatedAtDesc(id));
+        userRepository.delete(getById(id));
+    }
 
     @Transactional
     public void block(UUID id) {

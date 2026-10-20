@@ -74,7 +74,19 @@ public class CenterWebController {
     @PostMapping("/{id}/active")
     public String setActive(@PathVariable UUID id, @RequestParam boolean active, RedirectAttributes ra) {
         var c = centerService.setActive(id, active);
-        ra.addFlashAttribute("success", c.getName() + (active ? " yoqildi" : " o'chirildi: foydalanuvchilari kira olmaydi"));
+        ra.addFlashAttribute("success", c.getName() + (active ? " yoqildi" : " to'xtatildi: foydalanuvchilari kira olmaydi"));
+        return "redirect:/admin/centers";
+    }
+
+    @PostMapping("/{id}/delete")
+    public String delete(@PathVariable UUID id, RedirectAttributes ra) {
+        var c = centerService.getById(id);
+        try {
+            centerService.delete(id);
+            ra.addFlashAttribute("success", c.getName() + " o'chirildi");
+        } catch (BadRequestException e) {
+            ra.addFlashAttribute("error", e.getMessage());
+        }
         return "redirect:/admin/centers";
     }
 

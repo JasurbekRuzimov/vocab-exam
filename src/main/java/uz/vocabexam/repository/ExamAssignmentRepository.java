@@ -9,5 +9,10 @@ public interface ExamAssignmentRepository extends JpaRepository<ExamAssignment, 
     List<ExamAssignment> findByTeacherId(@Param("teacherId") UUID teacherId);
     @Query("SELECT a FROM ExamAssignment a WHERE (a.targetType = 'STUDENT' AND a.student.id = :studentId) OR (a.targetType = 'GROUP' AND a.group.id IN (SELECT g.id FROM Group g JOIN g.students s WHERE s.id = :studentId)) ORDER BY a.assignedAt DESC")
     List<ExamAssignment> findForStudent(@Param("studentId") UUID studentId);
+    List<ExamAssignment> findByExamIdOrderByAssignedAtDesc(UUID examId);
+    /** Guruh o'chirilganda uning topshiriqlari va natijalari tarix sifatida qoladi. */
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("UPDATE ExamAssignment a SET a.group = null WHERE a.group.id = :groupId")
+    void detachGroup(@Param("groupId") UUID groupId);
     boolean existsByExamIdAndStatus(UUID examId, AssignmentStatus status);
 }

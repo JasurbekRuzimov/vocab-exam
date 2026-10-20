@@ -13,6 +13,7 @@ import java.util.*;
 public class GroupService {
     private final GroupRepository groupRepository;
     private final UserRepository userRepository;
+    private final ExamAssignmentRepository assignmentRepository;
 
     public List<Group> getAll(UUID teacherId) {
         return teacherId != null ? groupRepository.findByTeacherId(teacherId) : groupRepository.findAll();
@@ -66,7 +67,11 @@ public class GroupService {
         return groupRepository.save(g);
     }
     @Transactional
-    public void delete(UUID id) { groupRepository.delete(getManaged(id)); }
+    public void delete(UUID id) {
+        getManaged(id);
+        assignmentRepository.detachGroup(id);
+        groupRepository.delete(getManaged(id));
+    }
     @Transactional
     public void addStudents(UUID groupId, List<UUID> studentIds) {
         Group g = getManaged(groupId);

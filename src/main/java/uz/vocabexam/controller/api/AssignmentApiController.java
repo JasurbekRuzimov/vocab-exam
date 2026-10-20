@@ -39,6 +39,12 @@ public class AssignmentApiController {
         return ResponseEntity.ok(assignmentService.getOwned(id));
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> delete(@PathVariable UUID id) {
+        assignmentService.delete(id);
+        return ResponseEntity.ok(Map.of("message", "Topshiriq o'chirildi"));
+    }
+
     @PatchMapping("/{id}/cancel")
     public ResponseEntity<?> cancel(@PathVariable UUID id) {
         assignmentService.cancel(id, SecurityUtils.currentUserId());

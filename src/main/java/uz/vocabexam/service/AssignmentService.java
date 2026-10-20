@@ -17,9 +17,13 @@ public class AssignmentService {
     private final GroupRepository groupRepository;
     private final UserRepository userRepository;
     private final NotificationService notificationService;
+    private final DataCleanupService cleanupService;
 
     public List<ExamAssignment> getByTeacher(UUID teacherId) {
         return assignmentRepository.findByTeacherId(teacherId);
+    }
+    public List<ExamAssignment> getByExam(UUID examId) {
+        return assignmentRepository.findByExamIdOrderByAssignedAtDesc(examId);
     }
     public List<ExamAssignment> getForStudent(UUID studentId) {
         return assignmentRepository.findForStudent(studentId);
@@ -69,5 +73,12 @@ public class AssignmentService {
         ExamAssignment a = getOwned(id);
         a.setStatus(AssignmentStatus.CANCELLED);
         assignmentRepository.save(a);
+    }
+
+    /** Topshiriq o'quvchilar javoblari va natijalari bilan birga o'chiriladi. */
+    @Transactional
+    public void delete(UUID id) {
+        getOwned(id);
+        cleanupService.purgeAssignments(List.of(id));
     }
 }

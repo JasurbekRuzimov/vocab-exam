@@ -30,6 +30,12 @@ public class GlobalExceptionHandler {
         return response(HttpStatus.FORBIDDEN, "Ruxsat yo'q");
     }
 
+    @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
+    public ResponseEntity<Map<String,Object>> conflict(org.springframework.dao.DataIntegrityViolationException ex) {
+        log.warn("Bog'liq ma'lumot sabab amal bajarilmadi: {}", ex.getMostSpecificCause().getMessage());
+        return response(HttpStatus.CONFLICT, "Bu yozuvga boshqa ma'lumotlar bog'langan. Avval ularni o'chiring.");
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String,Object>> general(Exception ex) {
         // Ichki xato tafsilotlari foydalanuvchiga ko'rsatilmaydi, faqat logga yoziladi

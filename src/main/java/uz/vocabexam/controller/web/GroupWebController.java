@@ -8,7 +8,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import uz.vocabexam.entity.*;
 import uz.vocabexam.service.*;
-import java.util.UUID;
+import java.util.*;
 
 @Controller
 @RequestMapping("/admin/groups")
@@ -43,8 +43,12 @@ public class GroupWebController {
         Group group = groupService.getManaged(id);
         model.addAttribute("group", group);
         // Faqat guruh markazidagi o'quvchilarni qo'shish mumkin
-        model.addAttribute("students",
-            userService.getAll(Role.STUDENT, null, group.getTeacher().getCenterId(), PageRequest.of(0, 500)).getContent());
+        UUID center = group.getTeacher().getCenterId();
+        Set<UUID> inGroup = group.getStudents().stream().map(User::getId).collect(java.util.stream.Collectors.toSet());
+        model.addAttribute("students", userService.getAll(Role.STUDENT, null, center, PageRequest.of(0, 500))
+            .getContent().stream().filter(s -> !inGroup.contains(s.getId())).toList());
+        // Tahrirlash oynasi uchun: guruhni shu markazdagi boshqa o'qituvchiga o'tkazish mumkin
+        model.addAttribute("teachers", userService.getAll(Role.TEACHER, null, center, PageRequest.of(0, 500)).getContent());
         return "groups/detail";
     }
 }

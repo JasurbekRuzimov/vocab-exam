@@ -17,6 +17,9 @@ public class WordSetService {
     private final WordRepository wordRepository;
     private final UserRepository userRepository;
     private final WordFileParserService fileParserService;
+    private final ExamRepository examRepository;
+    private final OnlineAnswerRepository answerRepository;
+    private final ExamVariantRepository variantRepository;
 
     public List<WordSet> getByTeacher(UUID teacherId) {
         return wordSetRepository.findByTeacherIdOrderByCreatedAtDesc(teacherId);
@@ -68,11 +71,15 @@ public class WordSetService {
     @Transactional
     public void rename(UUID id, String newName, UUID teacherId) {
         WordSet ws = getById(id); checkOwnership(ws, teacherId);
-        ws.setName(newName); wordSetRepository.save(ws);
+        if (newName == null || newName.isBlank()) throw new BadRequestException("Nom bo'sh bo'lmasin");
+        ws.setName(newName.trim()); wordSetRepository.save(ws);
     }
     @Transactional
     public void delete(UUID id, UUID teacherId) {
         WordSet ws = getById(id); checkOwnership(ws, teacherId);
+        long exams = examRepository.countByWordSetId(id);
+        if (exams > 0)
+            throw new BadRequestException("Bu to'plamdan " + exams + " ta imtihon yaratilgan. Avval o'sha imtihonlarni o'chiring.");
         wordSetRepository.delete(ws);
     }
     @Transactional
@@ -103,6 +110,10 @@ public class WordSetService {
     public void deleteWord(UUID wordId, UUID teacherId) {
         Word w = wordRepository.findById(wordId).orElseThrow(() -> new ResourceNotFoundException("So'z topilmadi"));
         checkOwnership(w.getWordSet(), teacherId);
+        // O'quvchi javob bergan yoki PDF variantga tushgan so'z o'chirilsa, natijalar buziladi
+        if (answerRepository.existsByWordId(wordId) || variantRepository.existsByWords_Id(wordId))
+            throw new BadRequestException("Bu so'z imtihonlarda ishlatilgan, uni o'chirib bo'lmaydi. Tarjimasini tahrirlash mumkin.");
+        w.getWordSet().getWords().remove(w);
         wordRepository.delete(w);
     }
     public List<Word> getWords(UUID wordSetId) { return wordRepository.findByWordSetId(wordSetId); }

@@ -58,6 +58,16 @@ public class CenterService {
         return c;
     }
 
+    /** Faqat bo'sh markaz o'chiriladi; foydalanuvchilari bor markazni faolsizlantirish kerak. */
+    @Transactional
+    public void delete(UUID id) {
+        Center c = getById(id);
+        long users = userRepository.countByCenter_Id(id);
+        if (users > 0)
+            throw new BadRequestException("Markazda " + users + " ta foydalanuvchi bor. Avval ularni o'chiring yoki markazni to'xtating.");
+        centerRepository.delete(c);
+    }
+
     @Transactional
     public Center update(UUID id, String name, String logoUrl, String color) {
         Center c = getById(id);

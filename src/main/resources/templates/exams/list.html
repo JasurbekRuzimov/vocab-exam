@@ -21,7 +21,13 @@
             <td th:text="${e.questionCount}"></td>
             <td><span class="badge" th:classappend="${e.status.name() == 'GENERATED'} ? 'bg-success' : 'bg-secondary'" th:text="${e.status}"></span></td>
             <td class="small text-muted" th:text="${#temporals.format(e.createdAt,'dd.MM.yyyy')}"></td>
-            <td><a th:href="@{'/teacher/exams/' + ${e.id}}" class="btn btn-sm btn-outline-secondary py-0"><i class="bi bi-eye"></i></a></td>
+            <td class="text-end text-nowrap">
+              <a th:href="@{'/teacher/exams/' + ${e.id}}" class="btn btn-sm btn-outline-secondary py-0" title="Ko'rish"><i class="bi bi-eye"></i></a>
+              <button class="btn btn-sm btn-outline-danger py-0" title="O'chirish"
+                      th:data-api-url="@{'/api/exams/' + ${e.id}}" data-api-method="DELETE"
+                      data-confirm="Imtihon o'chirilsinmi? Uning barcha topshiriqlari, o'quvchilar javoblari va natijalari ham o'chadi.">
+                <i class="bi bi-trash"></i></button>
+            </td>
           </tr>
           <tr th:if="${#lists.isEmpty(exams)}">
             <td colspan="6" class="text-center text-muted py-4">Imtihon yo'q</td>
