@@ -36,7 +36,7 @@ public class AssignmentApiController {
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getOne(@PathVariable UUID id) {
-        return ResponseEntity.ok(assignmentService.getById(id));
+        return ResponseEntity.ok(assignmentService.getOwned(id));
     }
 
     @PatchMapping("/{id}/cancel")

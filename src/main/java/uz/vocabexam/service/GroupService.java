@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import uz.vocabexam.entity.*;
 import uz.vocabexam.exception.*;
 import uz.vocabexam.repository.*;
+import uz.vocabexam.security.SecurityUtils;
 import java.util.*;
 
 @Service @RequiredArgsConstructor
@@ -18,6 +19,12 @@ public class GroupService {
     }
     public Group getById(UUID id) {
         return groupRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Guruh topilmadi"));
+    }
+    /** Guruhni faqat uning o'qituvchisi (yoki admin) uchun qaytaradi. */
+    public Group getOwned(UUID id) {
+        Group g = getById(id);
+        SecurityUtils.assertOwnerOrAdmin(g.getTeacher().getId());
+        return g;
     }
     @Transactional
     public Group create(String name, UUID teacherId) {

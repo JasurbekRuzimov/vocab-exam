@@ -37,9 +37,9 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf
-                .ignoringRequestMatchers("/api/**")   // ← REST API uchun CSRF o'chirildi
-            )
+            // CSRF hamma joyda yoqilgan: brauzer API ga sessiya cookie bilan murojaat qiladi,
+            // token esa layout/base.html dagi fetch o'rami orqali avtomatik qo'shiladi.
+            .csrf(csrf -> {})
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/login", "/css/**", "/js/**", "/images/**", "/favicon.ico").permitAll()
                 .requestMatchers("/admin/**").hasRole("SUPER_ADMIN")

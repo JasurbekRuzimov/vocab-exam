@@ -34,7 +34,7 @@ public class ExamWebController {
 
     @GetMapping("/{id}")
     public String detail(@PathVariable UUID id, Model model) {
-        model.addAttribute("exam",     examService.getById(id));
+        model.addAttribute("exam",     examService.getOwned(id));
         model.addAttribute("variants", examService.getVariants(id));
         model.addAttribute("assignments", assignmentService.getByTeacher(SecurityUtils.currentUserId()));
         return "exams/detail";
@@ -42,14 +42,14 @@ public class ExamWebController {
 
     @GetMapping("/{assignmentId}/submissions")
     public String submissions(@PathVariable UUID assignmentId, Model model) {
-        model.addAttribute("assignment", assignmentService.getById(assignmentId));
+        model.addAttribute("assignment", assignmentService.getOwned(assignmentId));
         model.addAttribute("submitted",  onlineExamService.getSubmittedStudents(assignmentId));
         return "online-exam/submissions";
     }
 
     @GetMapping("/{assignmentId}/submissions/{studentId}/check")
     public String check(@PathVariable UUID assignmentId, @PathVariable UUID studentId, Model model) {
-        model.addAttribute("assignment", assignmentService.getById(assignmentId));
+        model.addAttribute("assignment", assignmentService.getOwned(assignmentId));
         model.addAttribute("answers",    onlineExamService.getStudentAnswersForCheck(assignmentId, studentId));
         model.addAttribute("studentId",  studentId);
         return "online-exam/check";

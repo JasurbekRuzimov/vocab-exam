@@ -6,6 +6,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import uz.vocabexam.entity.*;
+import uz.vocabexam.exception.*;
 import uz.vocabexam.repository.ExamResultRepository;
 import uz.vocabexam.security.SecurityUtils;
 import uz.vocabexam.service.*;
@@ -43,7 +44,8 @@ public class StudentExamController {
             });
 
         model.addAttribute("assignment", a);
-        model.addAttribute("words", onlineExamService.getExamWords(a));
+        model.addAttribute("words", onlineExamService.getExamWords(a, studentId));
+        model.addAttribute("submitted", onlineExamService.hasSubmitted(assignmentId, studentId));
         model.addAttribute("savedAnswersMap", savedAnswersMap);
         return "online-exam/take";
     }
@@ -58,8 +60,11 @@ public class StudentExamController {
 
     @GetMapping("/results/{resultId}")
     public String resultDetail(@PathVariable UUID resultId, Model model) {
-        model.addAttribute("result",
-            examResultRepository.findById(resultId).orElseThrow());
+        ExamResult result = examResultRepository.findById(resultId)
+            .orElseThrow(() -> new ResourceNotFoundException("Natija topilmadi"));
+        if (!result.getStudent().getId().equals(SecurityUtils.currentUserId()))
+            throw new AccessForbiddenException("Ruxsat yo'q");
+        model.addAttribute("result", result);
         return "results/detail";
     }
 }

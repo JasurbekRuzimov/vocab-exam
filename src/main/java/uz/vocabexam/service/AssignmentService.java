@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import uz.vocabexam.entity.*;
 import uz.vocabexam.exception.*;
 import uz.vocabexam.repository.*;
+import uz.vocabexam.security.SecurityUtils;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -26,16 +27,23 @@ public class AssignmentService {
     public ExamAssignment getById(UUID id) {
         return assignmentRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Topshiriq topilmadi"));
     }
+    /** Topshiriqni faqat imtihon egasi (yoki admin) uchun qaytaradi. */
+    public ExamAssignment getOwned(UUID id) {
+        ExamAssignment a = getById(id);
+        SecurityUtils.assertOwnerOrAdmin(a.getExam().getTeacher().getId());
+        return a;
+    }
 
     @Transactional
     public List<ExamAssignment> assign(UUID examId, TargetType targetType, UUID targetId,
                                         LocalDateTime deadline, UUID teacherId) {
         Exam exam = examRepository.findById(examId).orElseThrow(() -> new ResourceNotFoundException("Imtihon topilmadi"));
-        if (!exam.getTeacher().getId().equals(teacherId)) throw new AccessForbiddenException("Ruxsat yo'q");
+        SecurityUtils.assertOwnerOrAdmin(exam.getTeacher().getId());
 
         List<ExamAssignment> created = new ArrayList<>();
         if (targetType == TargetType.GROUP) {
             Group group = groupRepository.findById(targetId).orElseThrow(() -> new ResourceNotFoundException("Guruh topilmadi"));
+            SecurityUtils.assertOwnerOrAdmin(group.getTeacher().getId());
             ExamAssignment a = assignmentRepository.save(ExamAssignment.builder()
                 .exam(exam).targetType(TargetType.GROUP).group(group).deadline(deadline).build());
             created.add(a);
@@ -44,6 +52,7 @@ public class AssignmentService {
                 "/student/exams/" + a.getId()));
         } else {
             User student = userRepository.findById(targetId).orElseThrow(() -> new ResourceNotFoundException("Student topilmadi"));
+            if (student.getRole() != Role.STUDENT) throw new BadRequestException("Tanlangan foydalanuvchi o'quvchi emas");
             ExamAssignment a = assignmentRepository.save(ExamAssignment.builder()
                 .exam(exam).targetType(TargetType.STUDENT).student(student).deadline(deadline).build());
             created.add(a);
@@ -55,8 +64,7 @@ public class AssignmentService {
 
     @Transactional
     public void cancel(UUID id, UUID teacherId) {
-        ExamAssignment a = getById(id);
-        if (!a.getExam().getTeacher().getId().equals(teacherId)) throw new AccessForbiddenException("Ruxsat yo'q");
+        ExamAssignment a = getOwned(id);
         a.setStatus(AssignmentStatus.CANCELLED);
         assignmentRepository.save(a);
     }

@@ -27,7 +27,7 @@ public class WordSetApiController {
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getOne(@PathVariable UUID id) {
-        return ResponseEntity.ok(wordSetService.getById(id));
+        return ResponseEntity.ok(wordSetService.getOwned(id));
     }
 
     @PutMapping("/{id}")
@@ -44,6 +44,7 @@ public class WordSetApiController {
 
     @GetMapping("/{id}/words")
     public ResponseEntity<?> getWords(@PathVariable UUID id) {
+        wordSetService.getOwned(id);
         return ResponseEntity.ok(wordSetService.getWords(id));
     }
 

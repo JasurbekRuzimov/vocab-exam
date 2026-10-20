@@ -1,0 +1,14 @@
+# Build
+target/
+*.class
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Muhit va runtime fayllar
+.env
+uploads/
+pdfs/
+*.log

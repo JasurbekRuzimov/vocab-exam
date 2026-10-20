@@ -40,7 +40,7 @@ public class ExamApiController {
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getOne(@PathVariable UUID id) {
-        return ResponseEntity.ok(examService.getById(id));
+        return ResponseEntity.ok(examService.getOwned(id));
     }
 
     @DeleteMapping("/{id}")
@@ -51,7 +51,7 @@ public class ExamApiController {
 
     @GetMapping("/{id}/variants/{variantId}/pdf")
     public ResponseEntity<Resource> downloadVariant(@PathVariable UUID id, @PathVariable UUID variantId) throws IOException {
-        Exam exam = examService.getById(id);
+        Exam exam = examService.getOwned(id);
         List<ExamVariant> variants = examService.getVariants(id);
         ExamVariant variant = variants.stream().filter(v -> v.getId().equals(variantId))
             .findFirst().orElseThrow(() -> new uz.vocabexam.exception.ResourceNotFoundException("Variant topilmadi"));
@@ -65,7 +65,7 @@ public class ExamApiController {
 
     @GetMapping("/{id}/download-zip")
     public ResponseEntity<Resource> downloadZip(@PathVariable UUID id) throws IOException {
-        Exam exam = examService.getById(id);
+        Exam exam = examService.getOwned(id);
         List<ExamVariant> variants = examService.getVariants(id);
         File zipFile = File.createTempFile("variants_", ".zip");
         try (var zos = new java.util.zip.ZipOutputStream(new FileOutputStream(zipFile))) {

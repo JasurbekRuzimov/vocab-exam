@@ -12,7 +12,12 @@
     <span id="autoSaveStatus" class="badge bg-secondary">Tayyor</span>
   </div>
 
-  <div class="alert alert-info small py-2 mb-3">
+  <div class="alert alert-success small py-2 mb-3" th:if="${submitted}">
+    <i class="bi bi-check-circle me-1"></i>
+    Siz bu imtihonni topshirgansiz. Javoblarni endi o'zgartirib bo'lmaydi.
+  </div>
+
+  <div class="alert alert-info small py-2 mb-3" th:unless="${submitted}">
     <i class="bi bi-info-circle me-1"></i>
     Har bir so'zdan foydalanib to'liq inglizcha gap yozing. Javoblar avtomatik saqlanadi.
   </div>
@@ -31,31 +36,32 @@
                 th:data-word-id="${word.id}"
                 th:data-assignment-id="${assignment.id}"
                 th:text="${savedAnswersMap[word.id.toString()]}"
+                th:readonly="${submitted}"
                 placeholder="Bu so'zdan foydalanib gap tuzing…"></textarea>
     </div>
   </div>
 
-  <div class="d-flex gap-3 mt-4">
+  <div class="d-flex gap-3 mt-4" th:unless="${submitted}">
     <button id="submitBtn" class="btn btn-success px-4"
             th:data-assignment-id="${assignment.id}">
       <i class="bi bi-send-check me-1"></i>Imtihonni topshirish
     </button>
   </div>
 
-  <script>
+  <script th:unless="${submitted}">
     const assignmentId = document.getElementById('submitBtn').dataset.assignmentId;
     const statusBadge  = document.getElementById('autoSaveStatus');
-    let saveTimer;
 
     async function saveAnswer(ta) {
       statusBadge.textContent = 'Saqlanmoqda…';
       statusBadge.className   = 'badge bg-warning text-dark';
       try {
-        await fetch('/api/online-exams/' + assignmentId + '/answers/' + ta.dataset.wordId, {
+        const res = await fetch('/api/online-exams/' + assignmentId + '/answers/' + ta.dataset.wordId, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ answerText: ta.value })
         });
+        if (!res.ok) throw new Error((await res.json().catch(() => ({}))).message || 'Xato');
         statusBadge.textContent = 'Saqlandi ✓';
         statusBadge.className   = 'badge bg-success';
       } catch {
@@ -67,8 +73,9 @@
     // Har 1.5 soniyada avtosaqlash
     document.querySelectorAll('.answer-input').forEach(ta => {
       ta.addEventListener('input', () => {
-        clearTimeout(saveTimer);
-        saveTimer = setTimeout(() => saveAnswer(ta), 1500);
+        // Har bir javob uchun alohida taymer: tez o'tib ketilganda oldingi javob yo'qolmaydi
+        clearTimeout(ta.saveTimer);
+        ta.saveTimer = setTimeout(() => saveAnswer(ta), 1500);
       });
     });
 

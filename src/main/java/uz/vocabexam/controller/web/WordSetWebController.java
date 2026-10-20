@@ -37,7 +37,7 @@ public class WordSetWebController {
 
     @GetMapping("/{id}")
     public String detail(@PathVariable UUID id, Model model) {
-        model.addAttribute("wordSet", wordSetService.getById(id));
+        model.addAttribute("wordSet", wordSetService.getOwned(id));
         model.addAttribute("words",   wordSetService.getWords(id));
         return "word-sets/detail";
     }

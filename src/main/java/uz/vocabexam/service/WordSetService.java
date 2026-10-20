@@ -7,6 +7,7 @@ import org.springframework.web.multipart.MultipartFile;
 import uz.vocabexam.entity.*;
 import uz.vocabexam.exception.*;
 import uz.vocabexam.repository.*;
+import uz.vocabexam.security.SecurityUtils;
 import java.util.*;
 import java.util.stream.*;
 
@@ -24,7 +25,14 @@ public class WordSetService {
         return wordSetRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("So'zlar to'plami topilmadi"));
     }
     public void checkOwnership(WordSet ws, UUID teacherId) {
+        if (SecurityUtils.isAdmin()) return;
         if (!ws.getTeacher().getId().equals(teacherId)) throw new AccessForbiddenException("Ruxsat yo'q");
+    }
+    /** To'plamni faqat egasi (yoki admin) uchun qaytaradi. */
+    public WordSet getOwned(UUID id) {
+        WordSet ws = getById(id);
+        SecurityUtils.assertOwnerOrAdmin(ws.getTeacher().getId());
+        return ws;
     }
 
     @Transactional
