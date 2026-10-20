@@ -42,6 +42,13 @@ public class ExamService {
     @Transactional
     public Exam createAndGenerate(String title, ExamType type, UUID wordSetId,
                                    UUID teacherId, int questionCount, int variantCount) {
+        return createAndGenerate(title, type, wordSetId, teacherId, questionCount, variantCount,
+            List.of(QuestionType.SENTENCE));
+    }
+
+    @Transactional
+    public Exam createAndGenerate(String title, ExamType type, UUID wordSetId, UUID teacherId,
+                                   int questionCount, int variantCount, List<QuestionType> questionTypes) {
         validateParams(questionCount, variantCount);
         WordSet ws = wordSetRepository.findById(wordSetId)
             .orElseThrow(() -> new ResourceNotFoundException("So'zlar to'plami topilmadi"));
@@ -50,12 +57,17 @@ public class ExamService {
         if (allWords.size() < questionCount)
             throw new BadRequestException("Faylda " + allWords.size() + " so'z bor, " + questionCount + " so'z so'raldi");
 
+        List<QuestionType> types = type == ExamType.ONLINE && questionTypes != null && !questionTypes.isEmpty()
+            ? questionTypes : List.of(QuestionType.SENTENCE);
+        validateQuestionTypes(types, allWords);
+
         User teacher = userRepository.findById(teacherId)
             .orElseThrow(() -> new ResourceNotFoundException("O'qituvchi topilmadi"));
 
         Exam exam = Exam.builder().title(title).type(type).wordSet(ws).teacher(teacher)
             .questionCount(questionCount).variantCount(variantCount)
             .status(ExamStatus.DRAFT).build();
+        exam.setQuestionTypeList(types);
         examRepository.save(exam);
 
         if (type == ExamType.PDF) {
@@ -94,6 +106,17 @@ public class ExamService {
 
     public List<ExamVariant> getVariants(UUID examId) {
         return variantRepository.findByExamIdOrderByVariantNumber(examId);
+    }
+
+    private void validateQuestionTypes(List<QuestionType> types, List<Word> words) {
+        if (types.stream().noneMatch(QuestionType::isAutoGraded)) return;
+        long missing = words.stream().filter(w -> w.getTranslation() == null || w.getTranslation().isBlank()).count();
+        if (missing > 0)
+            throw new BadRequestException("Tarjima va test savollari uchun har bir so'zda tarjima bo'lishi kerak. "
+                + "Tarjimasi yo'q so'zlar: " + missing + " ta");
+        long distinct = words.stream().map(w -> AnswerGrader.normalize(w.getTranslation())).distinct().count();
+        if (types.contains(QuestionType.MULTIPLE_CHOICE) && distinct < 4)
+            throw new BadRequestException("Test savoli uchun kamida 4 xil tarjima kerak");
     }
 
     private void validateParams(int questionCount, int variantCount) {

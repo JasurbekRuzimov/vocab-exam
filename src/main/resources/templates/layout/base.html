@@ -43,21 +43,21 @@
     <hr class="border-secondary">
     <ul class="nav nav-pills flex-column mb-auto gap-1">
       <li><a th:href="@{/}" class="nav-link text-white"><i class="bi bi-speedometer2 me-2"></i>Bosh sahifa</a></li>
-      <sec:authorize access="hasRole('SUPER_ADMIN')">
+      <th:block sec:authorize="hasRole('SUPER_ADMIN')">
         <li class="mt-2"><small class="text-secondary text-uppercase px-2" style="font-size:.7rem">Admin</small></li>
         <li><a th:href="@{/admin/users}"  class="nav-link text-white"><i class="bi bi-people me-2"></i>Foydalanuvchilar</a></li>
         <li><a th:href="@{/admin/groups}" class="nav-link text-white"><i class="bi bi-diagram-3 me-2"></i>Guruhlar</a></li>
-      </sec:authorize>
-      <sec:authorize access="hasAnyRole('TEACHER','SUPER_ADMIN')">
+      </th:block>
+      <th:block sec:authorize="hasAnyRole('TEACHER','SUPER_ADMIN')">
         <li class="mt-2"><small class="text-secondary text-uppercase px-2" style="font-size:.7rem">O'qituvchi</small></li>
         <li><a th:href="@{/teacher/word-sets}" class="nav-link text-white"><i class="bi bi-file-word me-2"></i>So'zlar</a></li>
         <li><a th:href="@{/teacher/exams}"     class="nav-link text-white"><i class="bi bi-journal-check me-2"></i>Imtihonlar</a></li>
-      </sec:authorize>
-      <sec:authorize access="hasRole('STUDENT')">
+      </th:block>
+      <th:block sec:authorize="hasRole('STUDENT')">
         <li class="mt-2"><small class="text-secondary text-uppercase px-2" style="font-size:.7rem">O'quvchi</small></li>
         <li><a th:href="@{/student/exams}"   class="nav-link text-white"><i class="bi bi-pencil-square me-2"></i>Imtihonlarim</a></li>
         <li><a th:href="@{/student/results}" class="nav-link text-white"><i class="bi bi-bar-chart me-2"></i>Natijalarim</a></li>
-      </sec:authorize>
+      </th:block>
     </ul>
     <hr class="border-secondary">
     <div class="d-flex align-items-center text-white gap-2">

@@ -41,6 +41,21 @@ public class Exam {
     @Column(nullable = false)
     private ExamStatus status = ExamStatus.DRAFT;
 
+    /** Savol turlari, vergul bilan saqlanadi (masalan "MULTIPLE_CHOICE,TRANSLATE_EN_UZ"). */
+    @Builder.Default
+    @Column(name = "question_types", nullable = false, length = 200)
+    private String questionTypes = QuestionType.SENTENCE.name();
+
+    public List<QuestionType> getQuestionTypeList() {
+        return Arrays.stream(questionTypes.split(","))
+            .map(String::trim).filter(s -> !s.isEmpty())
+            .map(QuestionType::valueOf).toList();
+    }
+
+    public void setQuestionTypeList(Collection<QuestionType> types) {
+        this.questionTypes = String.join(",", types.stream().distinct().map(Enum::name).toList());
+    }
+
     @Builder.Default
     @OneToMany(mappedBy = "exam", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ExamVariant> variants = new ArrayList<>();

@@ -40,7 +40,7 @@ public class WordSetService {
         if (file.getSize() > 5 * 1024 * 1024) throw new BadRequestException("Fayl hajmi 5 MB dan oshmasin");
         User teacher = userRepository.findById(teacherId)
             .orElseThrow(() -> new ResourceNotFoundException("O'qituvchi topilmadi"));
-        List<String> parsed = fileParserService.parse(file);
+        List<WordFileParserService.ParsedWord> parsed = fileParserService.parse(file);
         if (parsed.size() < 5) throw new BadRequestException("Kamida 5 ta so'z bo'lishi shart");
 
         WordSet ws = WordSet.builder()
@@ -50,14 +50,18 @@ public class WordSetService {
 
         List<String> duplicates = new ArrayList<>();
         Set<String> seen = new LinkedHashSet<>();
-        for (String w : parsed) {
-            if (!seen.add(w)) { duplicates.add(w); continue; }
-            wordRepository.save(Word.builder().wordSet(ws).text(w).build());
+        int withTranslation = 0;
+        for (WordFileParserService.ParsedWord p : parsed) {
+            if (!seen.add(p.text())) { duplicates.add(p.text()); continue; }
+            if (p.translation() != null) withTranslation++;
+            wordRepository.save(Word.builder().wordSet(ws).text(p.text())
+                .translation(p.translation()).example(p.example()).build());
         }
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("wordSet",   ws);
         result.put("wordCount", seen.size());
         result.put("duplicates", duplicates);
+        result.put("withTranslation", withTranslation);
         return result;
     }
 
@@ -73,11 +77,28 @@ public class WordSetService {
     }
     @Transactional
     public Word addWord(UUID wordSetId, String text, UUID teacherId) {
-        WordSet ws = getById(wordSetId); checkOwnership(ws, teacherId);
-        if (wordRepository.existsByWordSetIdAndTextIgnoreCase(wordSetId, text))
-            throw new BadRequestException("Bu so'z allaqachon mavjud");
-        return wordRepository.save(Word.builder().wordSet(ws).text(text.trim().toLowerCase()).build());
+        return addWord(wordSetId, text, null, null, teacherId);
     }
+    @Transactional
+    public Word addWord(UUID wordSetId, String text, String translation, String example, UUID teacherId) {
+        WordSet ws = getById(wordSetId); checkOwnership(ws, teacherId);
+        if (text == null || text.isBlank()) throw new BadRequestException("So'z bo'sh bo'lmasin");
+        if (wordRepository.existsByWordSetIdAndTextIgnoreCase(wordSetId, text.trim()))
+            throw new BadRequestException("Bu so'z allaqachon mavjud");
+        return wordRepository.save(Word.builder().wordSet(ws).text(text.trim().toLowerCase())
+            .translation(trimToNull(translation)).example(trimToNull(example)).build());
+    }
+    /** So'z kartochkasini (tarjima, misol) tahrirlash. */
+    @Transactional
+    public Word updateWord(UUID wordSetId, UUID wordId, String translation, String example, UUID teacherId) {
+        Word w = wordRepository.findById(wordId).orElseThrow(() -> new ResourceNotFoundException("So'z topilmadi"));
+        if (!w.getWordSet().getId().equals(wordSetId)) throw new ResourceNotFoundException("So'z topilmadi");
+        checkOwnership(w.getWordSet(), teacherId);
+        w.setTranslation(trimToNull(translation));
+        w.setExample(trimToNull(example));
+        return wordRepository.save(w);
+    }
+    private static String trimToNull(String s) { return s == null || s.isBlank() ? null : s.trim(); }
     @Transactional
     public void deleteWord(UUID wordId, UUID teacherId) {
         Word w = wordRepository.findById(wordId).orElseThrow(() -> new ResourceNotFoundException("So'z topilmadi"));

@@ -51,7 +51,15 @@ public class WordSetApiController {
     @PostMapping("/{id}/words")
     public ResponseEntity<?> addWord(@PathVariable UUID id, @RequestBody Map<String,String> body) {
         return ResponseEntity.status(HttpStatus.CREATED)
-            .body(wordSetService.addWord(id, body.get("text"), SecurityUtils.currentUserId()));
+            .body(wordSetService.addWord(id, body.get("text"), body.get("translation"), body.get("example"),
+                SecurityUtils.currentUserId()));
+    }
+
+    @PutMapping("/{id}/words/{wordId}")
+    public ResponseEntity<?> updateWord(@PathVariable UUID id, @PathVariable UUID wordId,
+                                        @RequestBody Map<String,String> body) {
+        return ResponseEntity.ok(wordSetService.updateWord(id, wordId, body.get("translation"), body.get("example"),
+            SecurityUtils.currentUserId()));
     }
 
     @DeleteMapping("/{id}/words/{wordId}")

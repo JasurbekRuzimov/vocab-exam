@@ -71,6 +71,8 @@ public class AnswerCheckService {
         if (score < 0 || score > MAX_ANSWER_SCORE)
             throw new BadRequestException("Ball 0 dan " + MAX_ANSWER_SCORE + " gacha bo'lishi kerak");
         ans.setScore(score);
+        // O'qituvchi avtomatik bahoni qo'lda o'zgartirsa (masalan sinonimni qabul qilsa), belgini ham yangilaymiz
+        if (ans.getQuestionType().isAutoGraded()) ans.setCorrect(score > 0);
         answerRepository.save(ans);
     }
 

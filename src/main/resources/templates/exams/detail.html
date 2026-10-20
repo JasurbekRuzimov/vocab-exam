@@ -7,6 +7,8 @@
       <h4 class="fw-bold mb-0" th:text="${exam.title}"></h4>
       <span class="badge" th:classappend="${exam.type.name() == 'PDF'} ? 'bg-warning text-dark' : 'bg-info text-dark'" th:text="${exam.type}"></span>
       <small class="text-muted ms-2" th:text="${exam.questionCount} + ' savol'"></small>
+      <span th:if="${exam.type.name() == 'ONLINE'}" th:each="qt : ${exam.questionTypeList}"
+            class="badge bg-light text-dark border ms-1" th:text="${qt.label}"></span>
     </div>
     <a th:href="@{/teacher/exams}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i>Orqaga</a>
   </div>

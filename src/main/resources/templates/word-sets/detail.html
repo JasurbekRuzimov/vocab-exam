@@ -5,52 +5,93 @@
   <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
       <h4 class="fw-bold mb-0" th:text="${wordSet.name}"></h4>
-      <small class="text-muted" th:text="${#lists.size(words)} + ' ta so\'z'"></small>
+      <small class="text-muted">
+        <span th:text="${#lists.size(words)} + ' ta so\'z'"></span> ·
+        <span id="translatedCount" th:text="${#lists.size(words.?[translation != null])}"></span> tasida tarjima bor
+      </small>
     </div>
     <a th:href="@{/teacher/word-sets}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i>Orqaga</a>
   </div>
+
+  <div class="alert alert-info small py-2" th:if="${#lists.size(words.?[translation == null]) > 0}">
+    <i class="bi bi-lightbulb me-1"></i>
+    Test va tarjima savollari uchun har bir so'zga tarjima yozing. Tarjima variantlarini vergul bilan ajrating: <code>chiroyli, go'zal</code>.
+  </div>
+
   <div class="card border-0 shadow-sm">
     <div class="card-header bg-white d-flex justify-content-between align-items-center">
-      <span class="fw-semibold">So'zlar</span>
+      <span class="fw-semibold">So'z kartochkalari</span>
       <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addWordModal">
         <i class="bi bi-plus"></i> So'z qo'shish
       </button>
     </div>
-    <div class="card-body">
-      <div class="row g-2">
-        <div class="col-sm-4 col-md-3" th:each="w : ${words}">
-          <div class="d-flex align-items-center gap-1 border rounded px-2 py-1 bg-light">
-            <span class="flex-grow-1 fw-semibold small" th:text="${w.text}"></span>
-            <button class="btn btn-sm text-danger p-0 border-0 bg-transparent delete-word"
-                    th:data-word-id="${w.id}" th:data-word-set-id="${wordSet.id}">
-              <i class="bi bi-x"></i>
-            </button>
-          </div>
-        </div>
-      </div>
+    <div class="table-responsive">
+      <table class="table align-middle mb-0">
+        <thead class="table-light">
+          <tr><th style="width:22%">So'z</th><th style="width:30%">Tarjima</th><th>Misol gap</th><th style="width:90px"></th></tr>
+        </thead>
+        <tbody>
+          <tr th:each="w : ${words}" class="word-row" th:data-word-id="${w.id}">
+            <td class="fw-semibold" th:text="${w.text}"></td>
+            <td><input type="text" class="form-control form-control-sm w-translation" th:value="${w.translation}" placeholder="tarjima…"></td>
+            <td><input type="text" class="form-control form-control-sm w-example" th:value="${w.example}" placeholder="ixtiyoriy"></td>
+            <td class="text-end text-nowrap">
+              <span class="save-state small text-success me-1"></span>
+              <button class="btn btn-sm text-danger p-0 border-0 bg-transparent delete-word" title="O'chirish">
+                <i class="bi bi-trash"></i>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
+
   <div class="modal fade" id="addWordModal" tabindex="-1">
-    <div class="modal-dialog modal-sm"><div class="modal-content">
+    <div class="modal-dialog"><div class="modal-content">
       <div class="modal-header"><h6 class="modal-title">So'z qo'shish</h6><button class="btn-close" data-bs-dismiss="modal"></button></div>
-      <div class="modal-body"><input type="text" id="newWordInput" class="form-control" placeholder="so'z kiriting…"></div>
+      <div class="modal-body">
+        <input type="text" id="newWordInput" class="form-control mb-2" placeholder="inglizcha so'z">
+        <input type="text" id="newTranslationInput" class="form-control mb-2" placeholder="tarjima (ixtiyoriy)">
+        <input type="text" id="newExampleInput" class="form-control" placeholder="misol gap (ixtiyoriy)">
+        <div id="addWordError" class="text-danger small mt-2"></div>
+      </div>
       <div class="modal-footer">
         <button class="btn btn-primary btn-sm" id="addWordBtn" th:data-url="@{'/api/word-sets/' + ${wordSet.id} + '/words'}">Qo'shish</button>
       </div>
     </div></div>
   </div>
-  <script>
+
+  <script th:inline="javascript">
+    const wordsUrl = /*[[@{'/api/word-sets/' + ${wordSet.id} + '/words'}]]*/ '';
+
     document.getElementById('addWordBtn').addEventListener('click', async () => {
       const text = document.getElementById('newWordInput').value.trim();
       if (!text) return;
-      await fetch(document.getElementById('addWordBtn').dataset.url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})});
-      location.reload();
+      const res = await fetch(wordsUrl, {method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({text,
+          translation: document.getElementById('newTranslationInput').value,
+          example: document.getElementById('newExampleInput').value})});
+      if (res.ok) location.reload();
+      else document.getElementById('addWordError').textContent = (await res.json()).message || 'Xato';
     });
-    document.querySelectorAll('.delete-word').forEach(btn => {
-      btn.addEventListener('click', async () => {
+
+    // Tarjima yoki misol o'zgarsa — maydondan chiqqanda saqlaymiz
+    document.querySelectorAll('.word-row').forEach(row => {
+      const state = row.querySelector('.save-state');
+      row.querySelectorAll('input').forEach(input => input.addEventListener('change', async () => {
+        state.textContent = '…';
+        const res = await fetch(wordsUrl + '/' + row.dataset.wordId, {method:'PUT', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({translation: row.querySelector('.w-translation').value,
+                                example: row.querySelector('.w-example').value})});
+        state.className = 'save-state small me-1 ' + (res.ok ? 'text-success' : 'text-danger');
+        state.textContent = res.ok ? '✓' : 'Xato';
+        document.getElementById('translatedCount').textContent =
+          [...document.querySelectorAll('.w-translation')].filter(i => i.value.trim()).length;
+      }));
+      row.querySelector('.delete-word').addEventListener('click', async () => {
         if (!confirm('O\'chirish?')) return;
-        const {wordSetId, wordId} = btn.dataset;
-        await fetch('/api/word-sets/'+wordSetId+'/words/'+wordId,{method:'DELETE'});
+        await fetch(wordsUrl + '/' + row.dataset.wordId, {method:'DELETE'});
         location.reload();
       });
     });
