@@ -15,7 +15,7 @@
         </select>
       </div>
       <div class="col">
-        <input type="text" name="search" class="form-control form-control-sm" placeholder="Ism yoki email…" th:value="${filter_search}">
+        <input type="text" name="search" class="form-control form-control-sm" placeholder="Ism, login yoki email…" th:value="${filter_search}">
       </div>
       <div class="col-auto"><button class="btn btn-outline-secondary btn-sm">Qidirish</button></div>
     </form>
@@ -24,12 +24,12 @@
     <div class="table-responsive">
       <table class="table table-hover mb-0 align-middle">
         <thead class="table-light">
-          <tr><th>Ism</th><th>Email</th><th>Rol</th><th>Holat</th><th>Sana</th><th></th></tr>
+          <tr><th>Ism</th><th>Login</th><th>Rol</th><th>Holat</th><th>Sana</th><th></th></tr>
         </thead>
         <tbody>
           <tr th:each="u : ${users}">
             <td class="fw-semibold" th:text="${u.fullName}"></td>
-            <td class="text-muted small" th:text="${u.email}"></td>
+            <td class="text-muted small" th:text="${u.username}"></td>
             <td><span class="badge"
               th:classappend="${u.role.name() == 'SUPER_ADMIN'} ? 'bg-danger' : (${u.role.name() == 'TEACHER'} ? 'bg-primary' : 'bg-secondary')"
               th:text="${u.role}"></span></td>

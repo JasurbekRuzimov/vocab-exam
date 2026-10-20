@@ -10,7 +10,7 @@ public class AuthWebController {
                         @RequestParam(required=false) String logout,
                         @RequestParam(required=false) String expired,
                         org.springframework.ui.Model model) {
-        if (error   != null) model.addAttribute("error",   "Email yoki parol noto'g'ri");
+        if (error   != null) model.addAttribute("error",   "Login yoki parol noto'g'ri");
         if (logout  != null) model.addAttribute("success", "Tizimdan chiqdingiz");
         if (expired != null) model.addAttribute("error",   "Sessiya muddati tugadi, qayta kiring");
         return "auth/login";

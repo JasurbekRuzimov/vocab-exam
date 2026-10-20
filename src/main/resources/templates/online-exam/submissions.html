@@ -13,12 +13,12 @@
     <div class="table-responsive">
       <table class="table table-hover mb-0 align-middle">
         <thead class="table-light">
-          <tr><th>O'quvchi</th><th>Email</th><th>Holat</th><th></th></tr>
+          <tr><th>O'quvchi</th><th>Login</th><th>Holat</th><th></th></tr>
         </thead>
         <tbody>
           <tr th:each="student : ${submitted}">
             <td class="fw-semibold" th:text="${student.fullName}"></td>
-            <td class="text-muted small" th:text="${student.email}"></td>
+            <td class="text-muted small" th:text="${student.username}"></td>
             <td><span class="badge bg-success">Topshirildi</span></td>
             <td class="text-end">
               <a th:href="@{'/teacher/exams/' + ${assignment.id} + '/submissions/' + ${student.id} + '/check'}"

@@ -29,7 +29,7 @@ mvn spring-boot:run
 ```
 
 ## Birinchi admin
-- **Email:** `ADMIN_EMAIL` (standart: `admin@vocabexam.uz`)
+- **Login:** `ADMIN_USERNAME` (standart: `admin`)
 - **Parol:** `ADMIN_PASSWORD` muhit o'zgaruvchisi. Berilmasa, birinchi ishga tushishda
   tasodifiy parol yaratiladi va logga **bir marta** chiqariladi — kirgandan keyin almashtiring.
 

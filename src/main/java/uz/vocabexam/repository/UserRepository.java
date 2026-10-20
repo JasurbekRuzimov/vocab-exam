@@ -8,8 +8,10 @@ import java.util.*;
 
 public interface UserRepository extends JpaRepository<User, UUID>,
     JpaSpecificationExecutor<User> {
-    Optional<User> findByEmail(String email);
-    boolean existsByEmail(String email);
+    Optional<User> findByUsername(String username);
+    boolean existsByUsername(String username);
+    Optional<User> findByEmailIgnoreCase(String email);
+    boolean existsByEmailIgnoreCase(String email);
     List<User> findByRole(Role role);
     Page<User> findByRole(Role role, Pageable pageable);
 }

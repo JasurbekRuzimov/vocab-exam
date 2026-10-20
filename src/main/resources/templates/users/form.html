@@ -14,12 +14,19 @@
               <input type="text" name="fullName" class="form-control" required th:value="${user?.fullName}">
             </div>
             <div class="mb-3">
-              <label class="form-label">Email *</label>
-              <input type="email" name="email" class="form-control" required th:value="${user?.email}">
+              <label class="form-label">Login *</label>
+              <input type="text" name="username" class="form-control" required
+                     pattern="[A-Za-z0-9._\-]{3,50}" autocapitalize="none" spellcheck="false"
+                     placeholder="masalan: ali.valiyev" th:value="${user?.username}">
+              <div class="form-text">Lotin harflari, raqamlar, nuqta, _ yoki -. Foydalanuvchi shu login bilan kiradi.</div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Email <span class="text-muted">(ixtiyoriy)</span></label>
+              <input type="email" name="email" class="form-control" th:value="${user?.email}">
             </div>
             <div th:if="${user == null}" class="mb-3">
               <label class="form-label">Parol *</label>
-              <input type="password" name="password" class="form-control" required minlength="8">
+              <input type="password" name="password" class="form-control" required minlength="6">
             </div>
             <div class="mb-4">
               <label class="form-label">Rol *</label>

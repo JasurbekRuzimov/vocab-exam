@@ -125,7 +125,7 @@ class SecurityAndExamFlowTests {
         submitAsStudent1();
         String body = mvc.perform(get("/api/online-exams/" + assignment.getId() + "/submissions").with(as(teacherA)))
             .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
-        assertThat(body).contains(student1.getEmail()).doesNotContain("passwordHash").doesNotContain("$2a$");
+        assertThat(body).contains(student1.getUsername()).doesNotContain("passwordHash").doesNotContain("$2a$");
     }
 
     // ── CSRF ─────────────────────────────────────────────────────────────────
@@ -195,6 +195,7 @@ class SecurityAndExamFlowTests {
 
     private User saveUser(String name, Role role) {
         return users.save(User.builder().fullName(name)
+            .username(name.toLowerCase().replace(" ", ""))
             .email(name.toLowerCase().replace(' ', '.') + "@test.uz")
             .passwordHash("$2a$12$abcdefghijklmnopqrstuuJ5W8b2rM8Qz0yQfQyQ5o0e1Gq4bZ9m2")
             .role(role).active(true).build());

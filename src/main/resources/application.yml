@@ -42,7 +42,7 @@ app:
   # Birinchi ishga tushirishda yaratiladigan admin. ADMIN_PASSWORD berilmasa,
   # tasodifiy parol yaratiladi va logga BIR MARTA chiqariladi.
   admin:
-    email: ${ADMIN_EMAIL:admin@vocabexam.uz}
+    username: ${ADMIN_USERNAME:admin}
     password: ${ADMIN_PASSWORD:}
   max-login-attempts: 5
   lockout-minutes: 15

@@ -13,6 +13,7 @@ import java.util.UUID;
 public class CustomUserDetails implements UserDetails {
     private final UUID id;
     private final String fullName;
+    private final String username;
     private final String email;
     private final String password;
     private final String role;
@@ -23,6 +24,7 @@ public class CustomUserDetails implements UserDetails {
     public CustomUserDetails(User user) {
         this.id       = user.getId();
         this.fullName = user.getFullName();
+        this.username = user.getUsername();
         this.email    = user.getEmail();
         this.password = user.getPasswordHash();
         this.role     = user.getRole().name();
@@ -31,7 +33,7 @@ public class CustomUserDetails implements UserDetails {
         this.authorities = List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()));
     }
 
-    @Override public String getUsername()               { return email; }
+    @Override public String getUsername()               { return username; }
     @Override public String getPassword()               { return password; }
     @Override public boolean isAccountNonExpired()      { return true; }
     @Override public boolean isAccountNonLocked()       { return !locked; }

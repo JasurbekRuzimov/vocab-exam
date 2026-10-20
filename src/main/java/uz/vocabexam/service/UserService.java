@@ -32,6 +32,7 @@ public class UserService {
                 String pattern = "%" + search.toLowerCase() + "%";
                 predicates.add(cb.or(
                     cb.like(cb.lower(root.get("fullName")), pattern),
+                    cb.like(cb.lower(root.get("username")), pattern),
                     cb.like(cb.lower(root.get("email")),    pattern)
                 ));
             }
@@ -47,23 +48,48 @@ public class UserService {
             .orElseThrow(() -> new ResourceNotFoundException("Foydalanuvchi topilmadi"));
     }
 
+    private static final java.util.regex.Pattern USERNAME = java.util.regex.Pattern.compile("[a-z0-9._-]{3,50}");
+
+    /** Loginni kichik harfga keltiradi va tekshiradi: masalan "Teacher1" -> "teacher1". */
+    static String normalizeUsername(String raw) {
+        String u = raw == null ? "" : raw.trim().toLowerCase();
+        if (!USERNAME.matcher(u).matches())
+            throw new BadRequestException("Login 3-50 belgi bo'lsin: lotin harflari, raqamlar, . _ -");
+        return u;
+    }
+
+    private static String normalizeEmail(String raw) {
+        return raw == null || raw.isBlank() ? null : raw.trim().toLowerCase();
+    }
+
     @Transactional
-    public User create(String fullName, String email, String password, Role role) {
-        if (userRepository.existsByEmail(email))
+    public User create(String fullName, String username, String email, String password, Role role) {
+        String login = normalizeUsername(username);
+        String mail  = normalizeEmail(email);
+        if (userRepository.existsByUsername(login))
+            throw new BadRequestException("Bu login band: " + login);
+        if (mail != null && userRepository.existsByEmailIgnoreCase(mail))
             throw new BadRequestException("Bu email allaqachon ro'yxatdan o'tgan");
+        if (password == null || password.length() < 6)
+            throw new BadRequestException("Parol kamida 6 belgi bo'lsin");
         return userRepository.save(User.builder()
-            .fullName(fullName).email(email)
+            .fullName(fullName).username(login).email(mail)
             .passwordHash(passwordEncoder.encode(password))
             .role(role).active(true).build());
     }
 
     @Transactional
-    public User update(UUID id, String fullName, String email, Role role) {
+    public User update(UUID id, String fullName, String username, String email, Role role) {
         User user = getById(id);
-        if (!user.getEmail().equals(email) && userRepository.existsByEmail(email))
+        String login = normalizeUsername(username);
+        String mail  = normalizeEmail(email);
+        if (!login.equals(user.getUsername()) && userRepository.existsByUsername(login))
+            throw new BadRequestException("Bu login band: " + login);
+        if (mail != null && !mail.equalsIgnoreCase(user.getEmail()) && userRepository.existsByEmailIgnoreCase(mail))
             throw new BadRequestException("Bu email allaqachon ishlatilmoqda");
         user.setFullName(fullName);
-        user.setEmail(email);
+        user.setUsername(login);
+        user.setEmail(mail);
         user.setRole(role);
         return userRepository.save(user);
     }
@@ -104,8 +130,8 @@ public class UserService {
     }
 
     @Transactional
-    public void recordFailedLogin(String email, int maxAttempts, int lockoutMinutes) {
-        userRepository.findByEmail(email).ifPresent(u -> {
+    public void recordFailedLogin(String login, int maxAttempts, int lockoutMinutes) {
+        uz.vocabexam.security.CustomUserDetailsService.findByLogin(userRepository, login).ifPresent(u -> {
             u.setLoginAttempts(u.getLoginAttempts() + 1);
             if (u.getLoginAttempts() >= maxAttempts)
                 u.setLockedUntil(LocalDateTime.now().plusMinutes(lockoutMinutes));
