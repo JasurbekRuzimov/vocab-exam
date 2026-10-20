@@ -5,6 +5,7 @@ import java.util.*;
 
 public interface WordRepository extends JpaRepository<Word, UUID> {
     List<Word> findByWordSetId(UUID wordSetId);
+    long countByWordSetId(UUID wordSetId);
     boolean existsByWordSetIdAndTextIgnoreCase(UUID wordSetId, String text);
     void deleteByWordSetId(UUID wordSetId);
 }

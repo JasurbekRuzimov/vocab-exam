@@ -18,6 +18,7 @@ public class AnswerCheckService {
     private final ExamAssignmentRepository assignmentRepository;
     private final UserRepository userRepository;
     private final NotificationService notificationService;
+    private final ResultChangeRepository changeRepository;
 
     public static final int MAX_ANSWER_SCORE = 10;
 
@@ -43,14 +44,28 @@ public class AnswerCheckService {
 
     @Transactional
     public AnswerError addError(UUID answerId, int start, int end, String comment, String correctHint) {
+        return addError(answerId, start, end, null, comment, correctHint);
+    }
+
+    /** Xato qo'shish: tur (masalan TENSE) tanlansa, izoh ixtiyoriy — bo'sh bo'lsa tur nomi yoziladi. */
+    @Transactional
+    public AnswerError addError(UUID answerId, int start, int end, ErrorCategory category,
+                                String comment, String correctHint) {
         OnlineAnswer answer = getOwnedAnswer(answerId);
+        if (comment == null || comment.isBlank()) {
+            if (category == null) throw new BadRequestException("Xato turini tanlang yoki izoh yozing");
+            comment = category.getLabel();
+        }
         if (start < 0) throw new BadRequestException("start manfiy bo'lishi mumkin emas");
         if (end <= start) throw new BadRequestException("end > start bo'lishi kerak");
         if (answer.getAnswerText() != null && end > answer.getAnswerText().length())
             throw new BadRequestException("end indeks matn uzunligidan oshib ketdi");
-        return errorRepository.save(AnswerError.builder()
+        AnswerError saved = errorRepository.save(AnswerError.builder()
             .answer(answer).errorStart(start).errorEnd(end)
-            .comment(comment).correctHint(correctHint).build());
+            .category(category).comment(comment.trim())
+            .correctHint(correctHint == null || correctHint.isBlank() ? null : correctHint.trim()).build());
+        answer.getErrors().add(saved); // shu sessiyada javobni o'qiyotganlar ham yangi xatoni ko'rsin
+        return saved;
     }
 
     @Transactional
@@ -62,7 +77,9 @@ public class AnswerCheckService {
 
     @Transactional
     public void deleteError(UUID answerId, UUID errorId) {
-        errorRepository.delete(getOwnedError(answerId, errorId));
+        AnswerError err = getOwnedError(answerId, errorId);
+        err.getAnswer().getErrors().remove(err);
+        errorRepository.delete(err);
     }
 
     @Transactional
@@ -78,6 +95,16 @@ public class AnswerCheckService {
 
     @Transactional
     public ExamResult saveResult(UUID assignmentId, UUID studentId, int totalScore, int maxScore, String comment) {
+        return saveResult(assignmentId, studentId, totalScore, maxScore, comment, null);
+    }
+
+    /**
+     * Natijani saqlaydi. E'lon qilingan natijaning bali o'zgarsa, sababi majburiy: o'zgarish tarixga
+     * yoziladi va o'quvchi natija sahifasida kim, qachon, nimadan nimaga o'zgartirganini ko'radi.
+     */
+    @Transactional
+    public ExamResult saveResult(UUID assignmentId, UUID studentId, int totalScore, int maxScore,
+                                 String comment, String changeReason) {
         ExamAssignment assignment = assignmentRepository.findById(assignmentId)
             .orElseThrow(() -> new ResourceNotFoundException("Topshiriq topilmadi"));
         SecurityUtils.assertOwnerOrAdmin(assignment.getExam().getTeacher().getId());
@@ -91,8 +118,17 @@ public class AnswerCheckService {
 
         Optional<ExamResult> existing = resultRepository.findByAssignmentIdAndStudentId(assignmentId, studentId);
         ExamResult result;
+        ResultChange change = null;
         if (existing.isPresent()) {
             result = existing.get();
+            if (result.getTotalScore() != totalScore || result.getMaxScore() != maxScore) {
+                if (changeReason == null || changeReason.isBlank())
+                    throw new BadRequestException("Natija e'lon qilingan. Ballni o'zgartirish sababini yozing");
+                change = ResultChange.builder().result(result)
+                    .changedBy(userRepository.getReferenceById(SecurityUtils.currentUserId()))
+                    .oldScore(result.getTotalScore()).oldMax(result.getMaxScore())
+                    .newScore(totalScore).newMax(maxScore).reason(changeReason.trim()).build();
+            }
             result.setTotalScore(totalScore); result.setMaxScore(maxScore);
             result.setComment(comment); result.setCheckedAt(LocalDateTime.now());
         } else {
@@ -101,10 +137,18 @@ public class AnswerCheckService {
                 .totalScore(totalScore).maxScore(maxScore).comment(comment).build();
         }
         ExamResult saved = resultRepository.save(result);
+        if (change != null) changeRepository.save(change);
         notificationService.send(studentId, NotificationType.RESULT_READY,
-            "Imtihon natijangiz tayyor: " + totalScore + "/" + maxScore + " ball",
+            change != null
+                ? "Natijangiz o'zgartirildi: " + change.getOldScore() + "/" + change.getOldMax()
+                    + " → " + totalScore + "/" + maxScore + " ball"
+                : "Imtihon natijangiz tayyor: " + totalScore + "/" + maxScore + " ball",
             "/student/results/" + saved.getId());
         return saved;
+    }
+
+    public List<ResultChange> getChanges(UUID resultId) {
+        return changeRepository.findByResultIdOrderByChangedAtDesc(resultId);
     }
 
     public List<AnswerError> getErrors(UUID answerId) {

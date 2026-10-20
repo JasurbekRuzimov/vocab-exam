@@ -21,7 +21,8 @@
   <div th:unless="${submitted}" class="card border-0 shadow-sm mb-3 sticky-top" style="top:8px;z-index:5">
     <div class="card-body py-2">
       <div class="d-flex justify-content-between small mb-1">
-        <span><i class="bi bi-info-circle me-1"></i>Javoblar avtomatik saqlanadi</span>
+        <span><i class="bi bi-info-circle me-1"></i>Javoblar avtomatik saqlanadi.
+          <span class="text-muted">Boshqa oynaga o'tsangiz, o'qituvchi buni ko'radi.</span></span>
         <span><strong id="answeredCount">0</strong> / <span th:text="${#lists.size(questions)}"></span> javob berildi</span>
       </div>
       <div class="progress" style="height:6px"><div id="progressBar" class="progress-bar bg-success" style="width:0%"></div></div>
@@ -121,6 +122,16 @@
       });
     });
     updateProgress();
+
+    // Jonli monitoring: o'qituvchi kim imtihonda ekanini va boshqa oynaga o'tishlarni ko'radi
+    function signal(event) {
+      fetch('/api/online-exams/' + assignmentId + '/activity', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({event}), keepalive: true
+      }).catch(() => {});
+    }
+    setInterval(() => { if (!document.hidden) signal('ping'); }, 30000);
+    document.addEventListener('visibilitychange', () => { if (document.hidden) signal('focus-lost'); });
 
     // Har 30 soniyada barcha javoblarni saqlash
     setInterval(async () => {

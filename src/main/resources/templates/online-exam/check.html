@@ -2,13 +2,40 @@
 <html th:replace="~{layout/base :: layout(~{::main}, 'Javoblarni tekshirish')}"
       lang="uz" xmlns:th="http://www.thymeleaf.org">
 <body><main>
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h5 class="fw-bold mb-0" th:text="${assignment.exam.title}"></h5>
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h5 class="fw-bold mb-0" th:text="${assignment.exam.title}"></h5>
+      <small class="text-muted" th:if="${student != null}">
+        <strong th:text="${student.fullName}"></strong> (<span th:text="${student.username}"></span>)
+        <th:block th:if="${attempt != null}"> · boshladi
+          <span th:text="${#temporals.format(attempt.startedAt,'dd.MM HH:mm')}"></span></th:block>
+      </small>
+    </div>
     <a th:href="@{'/teacher/exams/' + ${assignment.id} + '/submissions'}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i>Orqaga</a>
   </div>
-  <div th:each="answer : ${answers}" class="card border-0 shadow-sm mb-4" th:id="'card-' + ${answer.id}">
+
+  <div class="alert alert-warning small py-2" th:if="${attempt != null and attempt.focusLostCount > 0}">
+    <i class="bi bi-window-stack me-1"></i>
+    Imtihon vaqtida <strong th:text="${attempt.focusLostCount}"></strong> marta boshqa oyna yoki ilovaga o'tgan.
+    Bu faqat ma'lumot: ehtimol tasodifiy bo'lgan.
+  </div>
+
+  <div class="alert alert-info small py-2" th:if="${result != null}">
+    <i class="bi bi-info-circle me-1"></i>
+    Natija e'lon qilingan: <strong th:text="${result.totalScore} + '/' + ${result.maxScore}"></strong>.
+    Ballni o'zgartirsangiz, sababini yozing: o'quvchi o'zgarishni ko'radi.
+  </div>
+
+  <div class="small text-muted mb-3" th:if="${!#lists.isEmpty(answers.?[!questionType.autoGraded])}">
+    <i class="bi bi-hand-index me-1"></i>
+    Xatoni belgilash uchun gapdagi so'zni bosing. Bir nechta so'z bo'lsa, avval birinchisini, keyin oxirgisini bosing.
+  </div>
+
+  <div th:each="answer, st : ${answers}" class="card border-0 shadow-sm mb-3 answer-card" th:id="'card-' + ${answer.id}"
+       th:data-answer-id="${answer.id}">
     <div class="card-header bg-white d-flex justify-content-between align-items-center">
       <div>
+        <span class="text-muted small me-1" th:text="${st.count} + '.'"></span>
         <span class="fw-bold text-primary" th:text="${answer.prompt}"></span>
         <span class="badge bg-light text-dark border ms-2" th:text="${answer.questionType.label}"></span>
         <span th:if="${answer.correct != null}" class="badge ms-1"
@@ -17,41 +44,72 @@
       </div>
       <div class="d-flex align-items-center gap-2">
         <input type="number" class="form-control form-control-sm score-input" style="width:70px" min="0" max="10"
-               th:value="${answer.score}" th:data-answer-id="${answer.id}">
-        <button class="btn btn-sm btn-outline-success save-score-btn py-0" th:data-answer-id="${answer.id}"><i class="bi bi-check-lg"></i></button>
+               th:value="${answer.score}" th:data-answer-id="${answer.id}" title="Ball (0–10)">
+        <span class="text-muted small">/10</span>
+        <span class="score-state small" style="width:14px"></span>
       </div>
     </div>
     <div class="card-body">
-      <div class="p-3 bg-light rounded mb-2 answer-text" th:text="${answer.answerText ?: '(Javob yozilmagan)'}"></div>
+      <!-- Gap tuzish: so'zlar bosiladigan bo'laklarga ajratiladi -->
+      <div th:if="${answer.answerText != null and !answer.questionType.autoGraded}"
+           class="p-3 bg-light rounded mb-2 answer-text tokens" th:data-text="${answer.answerText}"
+           th:text="${answer.answerText}"></div>
+      <div th:unless="${answer.answerText != null and !answer.questionType.autoGraded}"
+           class="p-3 bg-light rounded mb-2 answer-text" th:text="${answer.answerText ?: '(Javob yozilmagan)'}"></div>
+
       <div class="small text-success mb-2" th:if="${answer.expectedAnswer != null}">
         <i class="bi bi-check2-circle me-1"></i>To'g'ri javob: <strong th:text="${answer.expectedAnswer}"></strong>
       </div>
-      <div class="d-flex gap-2 mb-3" th:if="${answer.answerText != null and !answer.questionType.autoGraded}">
-        <input type="number" placeholder="Bosh" class="form-control form-control-sm" style="width:80px" th:id="'s-' + ${answer.id}">
-        <input type="number" placeholder="Oxir" class="form-control form-control-sm" style="width:80px" th:id="'e-' + ${answer.id}">
-        <input type="text" placeholder="Izoh" class="form-control form-control-sm" th:id="'c-' + ${answer.id}">
-        <input type="text" placeholder="To'g'risi" class="form-control form-control-sm" th:id="'h-' + ${answer.id}">
-        <button class="btn btn-sm btn-outline-danger add-error-btn py-0" th:data-answer-id="${answer.id}"><i class="bi bi-plus-circle"></i></button>
+
+      <!-- Tanlangan bo'lak uchun xato formasi -->
+      <div class="error-form border rounded p-2 mb-2 d-none" th:if="${!answer.questionType.autoGraded}">
+        <div class="small mb-2">Tanlangan: <mark class="sel-preview"></mark></div>
+        <div class="d-flex flex-wrap gap-1 mb-2">
+          <th:block th:each="c : ${categories}">
+            <input type="radio" class="btn-check cat-input" autocomplete="off"
+                   th:name="'cat-' + ${answer.id}" th:id="'cat-' + ${answer.id} + '-' + ${c.name()}" th:value="${c.name()}">
+            <label class="btn btn-sm btn-outline-danger py-0" th:for="'cat-' + ${answer.id} + '-' + ${c.name()}" th:text="${c.label}"></label>
+          </th:block>
+        </div>
+        <div class="d-flex gap-2">
+          <input type="text" class="form-control form-control-sm err-comment" placeholder="Izoh (ixtiyoriy)">
+          <input type="text" class="form-control form-control-sm err-hint" placeholder="To'g'risi (ixtiyoriy)">
+          <button class="btn btn-sm btn-danger save-error-btn text-nowrap"><i class="bi bi-plus-circle me-1"></i>Qo'shish</button>
+          <button class="btn btn-sm btn-outline-secondary cancel-error-btn">Bekor</button>
+        </div>
       </div>
-      <div th:each="err : ${answer.errors}" class="d-flex align-items-start gap-2 p-2 mb-2 border rounded bg-danger-subtle small" th:id="'err-' + ${err.id}">
+
+      <div th:each="err : ${answer.errors}" class="err-item d-flex align-items-start gap-2 p-2 mb-2 border rounded bg-danger-subtle small"
+           th:id="'err-' + ${err.id}" th:data-start="${err.errorStart}" th:data-end="${err.errorEnd}">
         <i class="bi bi-exclamation-circle text-danger mt-1"></i>
         <div class="flex-grow-1">
-          <span class="text-danger fw-semibold" th:text="'[' + ${err.errorStart} + '-' + ${err.errorEnd} + '] '"></span>
-          <span th:text="${err.comment}"></span>
-          <span th:if="${err.correctHint}" class="text-success ms-2" th:text="'→ ' + ${err.correctHint}"></span>
+          <span th:if="${err.categoryLabel}" class="badge bg-danger err-cat me-1" th:text="${err.categoryLabel}"></span>
+          <span class="fw-semibold" th:if="${answer.answerText != null and err.errorEnd <= #strings.length(answer.answerText)}"
+                th:text="'«' + ${#strings.substring(answer.answerText, err.errorStart, err.errorEnd)} + '»'"></span>
+          <span th:if="${err.comment != err.categoryLabel}" th:text="${err.comment}"></span>
+          <span th:if="${err.correctHint}" class="text-success ms-1" th:text="'→ ' + ${err.correctHint}"></span>
         </div>
-        <button class="btn btn-sm text-danger p-0 border-0 bg-transparent delete-error-btn"
+        <button class="btn btn-sm text-danger p-0 border-0 bg-transparent delete-error-btn" title="O'chirish"
                 th:data-error-id="${err.id}" th:data-answer-id="${answer.id}"><i class="bi bi-x-lg"></i></button>
       </div>
     </div>
   </div>
+
   <div class="card border-0 shadow-sm mt-4">
     <div class="card-body">
       <h6 class="fw-semibold mb-3">Yakuniy natija</h6>
       <div class="row g-3">
-        <div class="col-sm-3"><label class="form-label small">Jami ball</label><input type="number" id="totalScore" class="form-control form-control-sm" min="0" th:value="${scoreSum}"></div>
-        <div class="col-sm-3"><label class="form-label small">Maksimal ball</label><input type="number" id="maxScore" class="form-control form-control-sm" th:value="${scoreMax > 0 ? scoreMax : 100}"></div>
-        <div class="col-sm-6"><label class="form-label small">Izoh</label><input type="text" id="resultComment" class="form-control form-control-sm"></div>
+        <div class="col-sm-3"><label class="form-label small">Jami ball</label>
+          <input type="number" id="totalScore" class="form-control form-control-sm" min="0" th:value="${result != null ? result.totalScore : scoreSum}"></div>
+        <div class="col-sm-3"><label class="form-label small">Maksimal ball</label>
+          <input type="number" id="maxScore" class="form-control form-control-sm" th:value="${result != null ? result.maxScore : (scoreMax > 0 ? scoreMax : 100)}"></div>
+        <div class="col-sm-6"><label class="form-label small">Izoh o'quvchiga</label>
+          <input type="text" id="resultComment" class="form-control form-control-sm" th:value="${result?.comment}"></div>
+        <div class="col-12" th:if="${result != null}">
+          <label class="form-label small">Ball o'zgarsa, sababi <span class="text-danger">*</span></label>
+          <input type="text" id="changeReason" class="form-control form-control-sm"
+                 placeholder="Masalan: sinonim qabul qilindi, qayta tekshirildi">
+        </div>
         <div class="col-12">
           <button id="saveResultBtn" class="btn btn-success btn-sm"
                   th:data-assignment-id="${assignment.id}" th:data-student-id="${studentId}">
@@ -59,43 +117,118 @@
           </button>
         </div>
       </div>
+
+      <div class="mt-4" th:if="${!#lists.isEmpty(changes)}">
+        <div class="small fw-semibold mb-1">O'zgarishlar tarixi</div>
+        <div class="small text-muted" th:each="c : ${changes}">
+          <span th:text="${#temporals.format(c.changedAt,'dd.MM.yyyy HH:mm')}"></span> ·
+          <span th:text="${c.oldScore} + '/' + ${c.oldMax} + ' → ' + ${c.newScore} + '/' + ${c.newMax}"></span> ·
+          <span th:text="${c.reason}"></span>
+          <span th:if="${c.changedByName}" th:text="'(' + ${c.changedByName} + ')'"></span>
+        </div>
+      </div>
     </div>
   </div>
+
   <script>
-    document.querySelectorAll('.add-error-btn').forEach(btn => {
+    // ── Gapdagi so'zlarni bosiladigan bo'laklarga ajratish ──────────────────────
+    let selection = null; // {card, start, end, anchor}
+
+    document.querySelectorAll('.tokens').forEach(box => {
+      const text = box.dataset.text;
+      const card = box.closest('.answer-card');
+      const errs = [...card.querySelectorAll('.err-item')].map(e => [+e.dataset.start, +e.dataset.end]);
+      box.textContent = '';
+      let pos = 0;
+      for (const m of text.matchAll(/\S+/g)) {
+        if (m.index > pos) box.append(text.slice(pos, m.index));
+        const s = m.index, e = m.index + m[0].length;
+        const tok = document.createElement('span');
+        tok.className = 'tok' + (errs.some(([a, b]) => a < e && s < b) ? ' err' : '');
+        tok.textContent = m[0];
+        tok.dataset.s = s; tok.dataset.e = e;
+        tok.addEventListener('click', () => selectToken(card, box, tok));
+        box.append(tok);
+        pos = e;
+      }
+      if (pos < text.length) box.append(text.slice(pos));
+    });
+
+    function selectToken(card, box, tok) {
+      const s = +tok.dataset.s, e = +tok.dataset.e;
+      if (selection && selection.card === card && selection.single) {
+        // Ikkinchi bosish: oraliqni kengaytiramiz
+        selection.start = Math.min(selection.start, s);
+        selection.end   = Math.max(selection.end, e);
+        selection.single = false;
+      } else {
+        clearSelection();
+        selection = {card, box, start: s, end: e, single: true};
+      }
+      box.querySelectorAll('.tok').forEach(t =>
+        t.classList.toggle('sel', +t.dataset.s >= selection.start && +t.dataset.e <= selection.end));
+      const form = card.querySelector('.error-form');
+      form.classList.remove('d-none');
+      form.querySelector('.sel-preview').textContent = box.dataset.text.slice(selection.start, selection.end);
+    }
+
+    function clearSelection() {
+      if (!selection) return;
+      selection.box.querySelectorAll('.tok.sel').forEach(t => t.classList.remove('sel'));
+      selection.card.querySelector('.error-form').classList.add('d-none');
+      selection = null;
+    }
+
+    document.querySelectorAll('.cancel-error-btn').forEach(btn => btn.addEventListener('click', clearSelection));
+
+    document.querySelectorAll('.save-error-btn').forEach(btn => {
       btn.addEventListener('click', async () => {
-        const id = btn.dataset.answerId;
-        const body = {errorStart:+document.getElementById('s-'+id).value, errorEnd:+document.getElementById('e-'+id).value,
-          comment:document.getElementById('c-'+id).value, correctHint:document.getElementById('h-'+id).value||null};
-        const res = await fetch('/api/answers/'+id+'/errors',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-        if (res.ok) location.reload(); else { const d=await res.json(); alert(d.message); }
+        const card = btn.closest('.answer-card');
+        if (!selection || selection.card !== card) return;
+        const form = card.querySelector('.error-form');
+        const body = {
+          errorStart: selection.start, errorEnd: selection.end,
+          category: form.querySelector('.cat-input:checked')?.value || null,
+          comment: form.querySelector('.err-comment').value,
+          correctHint: form.querySelector('.err-hint').value || null
+        };
+        const res = await fetch('/api/answers/' + card.dataset.answerId + '/errors',
+          {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
+        if (res.ok) location.reload();
+        else alert((await res.json()).message || 'Xato');
       });
     });
+
     document.querySelectorAll('.delete-error-btn').forEach(btn => {
       btn.addEventListener('click', async () => {
-        await fetch('/api/answers/'+btn.dataset.answerId+'/errors/'+btn.dataset.errorId,{method:'DELETE'});
-        document.getElementById('err-'+btn.dataset.errorId)?.remove();
+        await fetch('/api/answers/' + btn.dataset.answerId + '/errors/' + btn.dataset.errorId, {method: 'DELETE'});
+        location.reload();
       });
     });
-    document.querySelectorAll('.save-score-btn').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        const id = btn.dataset.answerId;
-        const score = +document.querySelector('.score-input[data-answer-id="'+id+'"]').value;
-        await fetch('/api/answers/'+id+'/score',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({score})});
-        btn.innerHTML='<i class="bi bi-check-all"></i>';
-        // Jami ballni savollar ballari yig'indisi bilan yangilaymiz
+
+    // ── Ball: o'zgarishi bilan saqlanadi, jami ball qayta hisoblanadi ──────────
+    document.querySelectorAll('.score-input').forEach(input => {
+      input.addEventListener('change', async () => {
+        const state = input.parentElement.querySelector('.score-state');
+        const res = await fetch('/api/answers/' + input.dataset.answerId + '/score',
+          {method: 'PATCH', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({score: +input.value})});
+        state.className = 'score-state small ' + (res.ok ? 'text-success' : 'text-danger');
+        state.textContent = res.ok ? '✓' : '!';
+        if (!res.ok) { alert((await res.json()).message || 'Xato'); return; }
         document.getElementById('totalScore').value =
           [...document.querySelectorAll('.score-input')].reduce((sum, i) => sum + (+i.value || 0), 0);
       });
     });
+
     document.getElementById('saveResultBtn').addEventListener('click', async () => {
       const {assignmentId, studentId} = document.getElementById('saveResultBtn').dataset;
-      const body = {totalScore:+document.getElementById('totalScore').value, maxScore:+document.getElementById('maxScore').value,
-        comment:document.getElementById('resultComment').value||null};
-      const res = await fetch('/api/online-exams/'+assignmentId+'/submissions/'+studentId+'/result',
-        {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-      if (res.ok) { alert('Natija saqlandi!'); history.back(); }
-      else { const d=await res.json(); alert(d.message); }
+      const body = {totalScore: +document.getElementById('totalScore').value, maxScore: +document.getElementById('maxScore').value,
+        comment: document.getElementById('resultComment').value || null,
+        changeReason: document.getElementById('changeReason')?.value || null};
+      const res = await fetch('/api/online-exams/' + assignmentId + '/submissions/' + studentId + '/result',
+        {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
+      if (res.ok) { window.location.href = '/teacher/exams/' + assignmentId + '/submissions'; }
+      else { const d = await res.json(); alert(d.message); }
     });
   </script>
 </main></body>

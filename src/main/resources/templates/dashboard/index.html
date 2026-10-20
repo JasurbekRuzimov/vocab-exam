@@ -65,6 +65,30 @@
   </th:block>
 
   <th:block sec:authorize="hasAnyRole('TEACHER','SUPER_ADMIN')">
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <span class="fw-semibold"><i class="bi bi-inbox me-1"></i>Tekshirish kutilmoqda</span>
+        <span class="badge rounded-pill" th:classappend="${#lists.isEmpty(pendingChecks)} ? 'bg-light text-muted border' : 'bg-warning text-dark'"
+              th:text="${#lists.size(pendingChecks)}"></span>
+      </div>
+      <div class="card-body text-muted small" th:if="${#lists.isEmpty(pendingChecks)}">
+        <i class="bi bi-check2-all me-1 text-success"></i>Hamma ish tekshirilgan.
+      </div>
+      <div class="list-group list-group-flush" th:unless="${#lists.isEmpty(pendingChecks)}">
+        <a th:each="p, st : ${pendingChecks}" th:if="${st.index < 10}"
+           th:href="@{'/teacher/exams/' + ${p.assignment.id} + '/submissions/' + ${p.student.id} + '/check'}"
+           class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+          <div>
+            <div class="fw-semibold" th:text="${p.student.fullName}"></div>
+            <small class="text-muted" th:text="${p.assignment.exam.title}"></small>
+          </div>
+          <small class="text-muted text-nowrap" th:text="${#temporals.format(p.submittedAt,'dd.MM HH:mm')}"></small>
+        </a>
+        <div class="list-group-item small text-muted" th:if="${#lists.size(pendingChecks) > 10}"
+             th:text="'yana ' + ${#lists.size(pendingChecks) - 10} + ' ta ish'"></div>
+      </div>
+    </div>
+
     <h6 class="text-muted mb-3">Tezkor harakatlar</h6>
     <div class="row g-3">
       <div class="col-sm-4">

@@ -1,36 +1,189 @@
 <!DOCTYPE html>
-<html th:replace="~{layout/base :: layout(~{::main}, 'Topshirishlar')}"
+<html th:replace="~{layout/base :: layout(~{::main}, 'Imtihon monitoringi')}"
       lang="uz" xmlns:th="http://www.thymeleaf.org">
 <body><main>
-  <div class="d-flex justify-content-between align-items-center mb-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
       <h5 class="fw-bold mb-0" th:text="${assignment.exam.title}"></h5>
-      <small class="text-muted">Topshirishlar</small>
+      <small class="text-muted">
+        <span th:text="${assignment.group != null ? assignment.group.name : assignment.student?.fullName}"></span>
+        <span th:if="${assignment.deadline != null}"> · muddat
+          <strong th:text="${#temporals.format(assignment.deadline,'dd.MM.yyyy HH:mm')}"></strong></span>
+        · har o'quvchiga <span th:text="${monitor.questionCount}"></span> ta savol
+      </small>
     </div>
-    <a th:href="@{/teacher/exams}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i>Orqaga</a>
+    <a th:href="@{'/teacher/exams/' + ${assignment.exam.id}}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i>Orqaga</a>
   </div>
-  <div class="card border-0 shadow-sm">
-    <div class="table-responsive">
-      <table class="table table-hover mb-0 align-middle">
-        <thead class="table-light">
-          <tr><th>O'quvchi</th><th>Login</th><th>Holat</th><th></th></tr>
-        </thead>
-        <tbody>
-          <tr th:each="student : ${submitted}">
-            <td class="fw-semibold" th:text="${student.fullName}"></td>
-            <td class="text-muted small" th:text="${student.username}"></td>
-            <td><span class="badge bg-success">Topshirildi</span></td>
-            <td class="text-end">
-              <a th:href="@{'/teacher/exams/' + ${assignment.id} + '/submissions/' + ${student.id} + '/check'}"
-                 class="btn btn-sm btn-primary py-0"><i class="bi bi-check-square me-1"></i>Tekshirish</a>
-            </td>
-          </tr>
-          <tr th:if="${#lists.isEmpty(submitted)}">
-            <td colspan="4" class="text-center text-muted py-4">Hali hech kim topshirmagan</td>
-          </tr>
-        </tbody>
-      </table>
+
+  <!-- Umumiy ko'rsatkichlar -->
+  <div class="row g-3 mb-3">
+    <div class="col-6 col-lg-3">
+      <div class="card border-0 shadow-sm p-3 h-100">
+        <small class="text-muted">Tayinlangan</small>
+        <div class="fs-3 fw-bold" th:text="${monitor.stats.assigned}"></div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="card border-0 shadow-sm p-3 h-100">
+        <small class="text-muted">Topshirgan</small>
+        <div class="fs-3 fw-bold">
+          <span th:text="${monitor.stats.submitted}"></span><span class="fs-6 text-muted" th:text="' / ' + ${monitor.stats.assigned}"></span>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="card border-0 shadow-sm p-3 h-100">
+        <small class="text-muted">Baholangan</small>
+        <div class="fs-3 fw-bold" th:text="${monitor.stats.graded}"></div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="card border-0 shadow-sm p-3 h-100">
+        <small class="text-muted">O'rtacha natija</small>
+        <div class="fs-3 fw-bold" th:text="${monitor.stats.avgPercent != null ? monitor.stats.avgPercent + '%' : '—'}"></div>
+      </div>
     </div>
   </div>
+
+  <!-- Jonli ro'yxat: har 10 soniyada yangilanadi -->
+  <div class="card border-0 shadow-sm mb-3">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+      <span class="fw-semibold">O'quvchilar</span>
+      <small class="text-muted"><span id="liveDot" class="d-inline-block rounded-circle bg-success me-1" style="width:8px;height:8px"></span>
+        jonli · <span id="liveTime">hozir</span> yangilandi</small>
+    </div>
+    <div id="roster" th:fragment="roster" th:data-in-progress="${monitor.anyoneInProgress}">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0 align-middle">
+          <thead class="table-light">
+            <tr><th>O'quvchi</th><th>Holat</th><th style="min-width:140px">Javoblar</th>
+                <th title="Imtihon vaqtida boshqa oyna yoki ilovaga o'tgan">Oynadan chiqish</th><th>Ball</th><th></th></tr>
+          </thead>
+          <tbody>
+            <tr th:each="r : ${monitor.rows}">
+              <td>
+                <div class="fw-semibold" th:text="${r.student.fullName}"></div>
+                <small class="text-muted" th:text="${r.student.username}"></small>
+              </td>
+              <td>
+                <span class="badge"
+                      th:classappend="${r.status.name() == 'GRADED'} ? 'bg-success' : (${r.status.name() == 'SUBMITTED'} ? 'bg-warning text-dark' : (${r.status.name() == 'IN_PROGRESS'} ? 'bg-primary' : 'bg-light text-muted border'))"
+                      th:text="${r.status.label}"></span>
+                <span th:if="${r.online}" class="small text-success ms-1" title="Hozir imtihon sahifasida">● onlayn</span>
+                <div class="small text-muted" th:if="${r.submittedAt != null}"
+                     th:text="'topshirdi ' + ${#temporals.format(r.submittedAt,'dd.MM HH:mm')}"></div>
+                <div class="small text-muted" th:if="${r.submittedAt == null and r.startedAt != null}"
+                     th:text="'boshladi ' + ${#temporals.format(r.startedAt,'dd.MM HH:mm')}"></div>
+              </td>
+              <td>
+                <div class="d-flex align-items-center gap-2">
+                  <div class="progress flex-grow-1" style="height:6px">
+                    <div class="progress-bar" th:classappend="${r.status.name() == 'IN_PROGRESS'} ? 'bg-primary' : 'bg-success'"
+                         th:style="'width:' + (${r.total} > 0 ? ${100 * r.answered / r.total} : 0) + '%'"></div>
+                  </div>
+                  <small class="text-muted text-nowrap" th:text="${r.answered} + '/' + ${r.total}"></small>
+                </div>
+              </td>
+              <td>
+                <span th:if="${r.focusLost > 0}" class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle"
+                      th:text="${r.focusLost} + ' marta'"></span>
+                <span th:if="${r.focusLost == 0 and r.status.name() != 'NOT_STARTED'}" class="text-muted small">—</span>
+              </td>
+              <td>
+                <span th:if="${r.result != null}" class="fw-semibold" th:text="${r.result.totalScore} + '/' + ${r.result.maxScore}"></span>
+                <small th:if="${r.result != null}" class="text-muted" th:text="'(' + ${r.percent} + '%)'"></small>
+              </td>
+              <td class="text-end text-nowrap">
+                <a th:if="${r.status.name() == 'SUBMITTED'}"
+                   th:href="@{'/teacher/exams/' + ${assignment.id} + '/submissions/' + ${r.student.id} + '/check'}"
+                   class="btn btn-sm btn-primary py-0"><i class="bi bi-check-square me-1"></i>Tekshirish</a>
+                <a th:if="${r.status.name() == 'GRADED'}"
+                   th:href="@{'/teacher/exams/' + ${assignment.id} + '/submissions/' + ${r.student.id} + '/check'}"
+                   class="btn btn-sm btn-outline-secondary py-0"><i class="bi bi-eye me-1"></i>Ko'rish</a>
+              </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(monitor.rows)}">
+              <td colspan="6" class="text-center text-muted py-4">Bu topshiriqda o'quvchi yo'q</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <!-- Ballar taqsimoti -->
+    <div class="col-lg-5">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-white fw-semibold">Natijalar taqsimoti</div>
+        <div class="card-body">
+          <p class="text-muted small mb-0" th:if="${monitor.stats.graded == 0}">Hali baholangan ish yo'q.</p>
+          <div th:if="${monitor.stats.graded > 0}" th:each="label, st : ${bucketLabels}" class="d-flex align-items-center gap-2 mb-2">
+            <small class="text-muted" style="width:70px" th:text="${label}"></small>
+            <div class="progress flex-grow-1" style="height:14px">
+              <div class="progress-bar"
+                   th:classappend="${st.index == 0} ? 'bg-danger' : (${st.index == 1} ? 'bg-warning' : (${st.index == 2} ? 'bg-info' : 'bg-success'))"
+                   th:style="'width:' + ${100 * monitor.stats.buckets[st.index] / monitor.stats.graded} + '%'"></div>
+            </div>
+            <small class="fw-semibold" style="width:24px" th:text="${monitor.stats.buckets[st.index]}"></small>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Eng qiyin so'zlar -->
+    <div class="col-lg-7">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-white fw-semibold">Eng ko'p xato qilingan so'zlar</div>
+        <div class="card-body p-0">
+          <p class="text-muted small m-3" th:if="${#lists.isEmpty(monitor.hardestWords)}">Hali ma'lumot yo'q: ballar qo'yilgach shu yerda chiqadi.</p>
+          <table class="table table-sm mb-0 align-middle" th:unless="${#lists.isEmpty(monitor.hardestWords)}">
+            <thead class="table-light"><tr><th class="ps-3">So'z</th><th>Xato / javob</th><th style="width:40%">O'rtacha ball</th></tr></thead>
+            <tbody>
+              <tr th:each="w : ${monitor.hardestWords}">
+                <td class="ps-3"><span class="fw-semibold" th:text="${w.word}"></span>
+                  <small class="text-muted" th:if="${w.translation}" th:text="' — ' + ${w.translation}"></small></td>
+                <td th:text="${w.wrong} + ' / ' + ${w.attempts}"></td>
+                <td>
+                  <div class="d-flex align-items-center gap-2">
+                    <div class="progress flex-grow-1" style="height:6px">
+                      <div class="progress-bar" th:classappend="${w.percent < 50} ? 'bg-danger' : 'bg-warning'" th:style="'width:' + ${w.percent} + '%'"></div>
+                    </div>
+                    <small th:text="${w.percent} + '%'"></small>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script th:inline="javascript">
+    // Jonli yangilanish: jadvalni har 10 soniyada serverdan qayta olamiz (sahifa ochiq turganida)
+    const liveUrl = /*[[@{'/teacher/exams/' + ${assignment.id} + '/submissions/live'}]]*/ '';
+    let lastUpdate = Date.now();
+    async function refreshRoster() {
+      if (document.hidden) return;
+      try {
+        const res = await fetch(liveUrl, {headers: {'X-Requested-With': 'fetch'}});
+        if (!res.ok) throw new Error();
+        const html = await res.text();
+        const tmp = document.createElement('div');
+        tmp.innerHTML = html;
+        const fresh = tmp.querySelector('#roster');
+        if (fresh) document.getElementById('roster').replaceWith(fresh);
+        lastUpdate = Date.now();
+        document.getElementById('liveDot').className = 'd-inline-block rounded-circle bg-success me-1';
+      } catch {
+        document.getElementById('liveDot').className = 'd-inline-block rounded-circle bg-danger me-1';
+      }
+    }
+    setInterval(refreshRoster, 10000);
+    setInterval(() => {
+      const s = Math.round((Date.now() - lastUpdate) / 1000);
+      document.getElementById('liveTime').textContent = s < 5 ? 'hozir' : s + ' soniya oldin';
+    }, 1000);
+  </script>
 </main></body>
 </html>

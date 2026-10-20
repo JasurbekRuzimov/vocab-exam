@@ -72,4 +72,29 @@ public class OnlineAnswer {
     @Builder.Default
     @OneToMany(mappedBy = "answer", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<AnswerError> errors = new ArrayList<>();
+
+    /** Javob matnining bir bo'lagi; {@code error} bo'lsa, bu bo'lak xato deb belgilangan. */
+    public record Segment(String text, AnswerError error) {}
+
+    /**
+     * Javob matnini xatolar bo'yicha bo'laklarga ajratadi: natija sahifasida xato joylari
+     * rangli ko'rsatiladi. Bir-birini qoplagan xatolardan birinchisi olinadi.
+     */
+    @JsonIgnore
+    public List<Segment> getSegments() {
+        List<Segment> out = new ArrayList<>();
+        if (answerText == null || answerText.isEmpty()) return out;
+        List<AnswerError> sorted = new ArrayList<>(errors);
+        sorted.sort(Comparator.comparingInt(AnswerError::getErrorStart));
+        int pos = 0, len = answerText.length();
+        for (AnswerError e : sorted) {
+            int start = Math.max(e.getErrorStart(), pos), end = Math.min(e.getErrorEnd(), len);
+            if (start >= end) continue;
+            if (start > pos) out.add(new Segment(answerText.substring(pos, start), null));
+            out.add(new Segment(answerText.substring(start, end), e));
+            pos = end;
+        }
+        if (pos < len) out.add(new Segment(answerText.substring(pos), null));
+        return out;
+    }
 }

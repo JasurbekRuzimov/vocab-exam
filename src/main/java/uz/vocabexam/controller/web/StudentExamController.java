@@ -21,6 +21,8 @@ public class StudentExamController {
     private final AssignmentService assignmentService;
     private final OnlineExamService onlineExamService;
     private final ExamResultRepository examResultRepository;
+    private final ExamMonitorService monitorService;
+    private final AnswerCheckService answerCheckService;
 
     @GetMapping("/exams")
     public String myExams(Model model) {
@@ -43,9 +45,12 @@ public class StudentExamController {
                 }
             });
 
+        boolean submitted = onlineExamService.hasSubmitted(assignmentId, studentId);
+        if (!submitted) monitorService.recordOpen(a, studentId); // jonli monitoring: "boshladi"
+
         model.addAttribute("assignment", a);
         model.addAttribute("questions", onlineExamService.getQuestions(a, studentId));
-        model.addAttribute("submitted", onlineExamService.hasSubmitted(assignmentId, studentId));
+        model.addAttribute("submitted", submitted);
         model.addAttribute("savedAnswersMap", savedAnswersMap);
         return "online-exam/take";
     }
@@ -68,6 +73,7 @@ public class StudentExamController {
         // Shaffoflik: har savol bo'yicha javob, to'g'ri javob va ball
         model.addAttribute("answers", onlineExamService.getStudentAnswersForCheck(
             result.getAssignment().getId(), result.getStudent().getId()));
+        model.addAttribute("changes", answerCheckService.getChanges(result.getId()));
         return "results/detail";
     }
 }

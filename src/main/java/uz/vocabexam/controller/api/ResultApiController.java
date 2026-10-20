@@ -20,6 +20,7 @@ public class ResultApiController {
             answerCheckService.saveResult(assignmentId, studentId,
                 AnswerApiController.requireInt(body, "totalScore"),
                 body.get("maxScore") != null ? AnswerApiController.requireInt(body, "maxScore") : 100,
-                (String)  body.get("comment")));
+                (String)  body.get("comment"),
+                (String)  body.get("changeReason")));
     }
 }

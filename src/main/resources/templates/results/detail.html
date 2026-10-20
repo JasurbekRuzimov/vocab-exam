@@ -22,6 +22,22 @@
     </div>
   </div>
 
+  <!-- Shaffoflik: natija e'lon qilingandan keyingi har bir o'zgarish -->
+  <div class="card border-0 shadow-sm mt-3" th:if="${!#lists.isEmpty(changes)}">
+    <div class="card-header bg-white fw-semibold"><i class="bi bi-clock-history me-1"></i>Ball o'zgarishlari</div>
+    <div class="list-group list-group-flush">
+      <div class="list-group-item small" th:each="c : ${changes}">
+        <div class="d-flex justify-content-between">
+          <span><span class="text-muted text-decoration-line-through" th:text="${c.oldScore} + '/' + ${c.oldMax}"></span>
+            → <strong th:text="${c.newScore} + '/' + ${c.newMax}"></strong></span>
+          <span class="text-muted" th:text="${#temporals.format(c.changedAt,'dd.MM.yyyy HH:mm')}"></span>
+        </div>
+        <div>Sabab: <span th:text="${c.reason}"></span>
+          <span class="text-muted" th:if="${c.changedByName}" th:text="'— ' + ${c.changedByName}"></span></div>
+      </div>
+    </div>
+  </div>
+
   <div class="card border-0 shadow-sm mt-4" th:if="${!#lists.isEmpty(answers)}">
     <div class="card-header bg-white fw-semibold">Savollar bo'yicha</div>
     <div class="list-group list-group-flush">
@@ -33,17 +49,28 @@
               <span class="fw-semibold" th:text="${a.prompt}"></span>
               <span class="badge bg-light text-dark border ms-1" th:text="${a.questionType.label}"></span>
             </div>
-            <div class="mt-1">
+            <div class="mt-1" th:if="${a.questionType.autoGraded or #lists.isEmpty(a.errors)}">
               <span class="small text-muted">Sizning javobingiz:</span>
               <span th:text="${a.answerText ?: '(javob berilmagan)'}"
                     th:classappend="${a.correct == false} ? 'text-danger text-decoration-line-through' : ''"></span>
+            </div>
+            <!-- Gap tuzish: o'qituvchi belgilagan xato joylari matn ichida ko'rsatiladi -->
+            <div class="mt-1" th:unless="${a.questionType.autoGraded or #lists.isEmpty(a.errors)}">
+              <span class="small text-muted">Sizning javobingiz:</span>
+              <span class="answer-text"><th:block th:each="seg : ${a.segments}"><span
+                    th:if="${seg.error != null}" class="error-highlight"
+                    th:title="${seg.error.comment}" th:text="${seg.text}"></span><th:block
+                    th:if="${seg.error == null}" th:text="${seg.text}"></th:block></th:block></span>
             </div>
             <div class="small text-success" th:if="${a.expectedAnswer != null and (a.correct != true or !#strings.equalsIgnoreCase(#strings.trim(a.answerText), a.expectedAnswer))}">
               To'g'ri javob: <strong th:text="${a.expectedAnswer}"></strong>
             </div>
             <div class="small mt-1" th:each="err : ${a.errors}">
               <i class="bi bi-exclamation-circle text-danger me-1"></i>
-              <span th:text="${err.comment}"></span>
+              <span th:if="${err.categoryLabel}" class="badge bg-danger err-cat me-1" th:text="${err.categoryLabel}"></span>
+              <span class="fw-semibold" th:if="${a.answerText != null and err.errorEnd <= #strings.length(a.answerText)}"
+                    th:text="'«' + ${#strings.substring(a.answerText, err.errorStart, err.errorEnd)} + '»'"></span>
+              <span th:if="${err.comment != err.categoryLabel}" th:text="${err.comment}"></span>
               <span th:if="${err.correctHint}" class="text-success ms-1" th:text="'→ ' + ${err.correctHint}"></span>
             </div>
           </div>

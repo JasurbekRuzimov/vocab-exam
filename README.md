@@ -46,6 +46,7 @@ mvn spring-boot:run
 - `/admin/groups` — Guruhlar (Admin)
 - `/teacher/word-sets` — So'zlar to'plamlari
 - `/teacher/exams` — Imtihonlar
+- `/teacher/exams/{assignmentId}/submissions` — Jonli monitoring va statistika (har 10 soniyada yangilanadi)
 - `/student/exams` — Imtihon topshirish
 - `/student/results` — Natijalar
 
@@ -54,4 +55,6 @@ mvn spring-boot:run
 - `GET /api/exams/{id}/download-zip` — Barcha variantlarni ZIP yuklab olish
 - `PUT /api/online-exams/{assignmentId}/answers/{wordId}` — Avtosaqlash
 - `POST /api/online-exams/{assignmentId}/submit` — Topshirish
-- `POST /api/answers/{answerId}/errors` — Xato belgilash
+- `POST /api/online-exams/{assignmentId}/activity` — Monitoring signali (`ping` yoki `focus-lost`)
+- `POST /api/answers/{answerId}/errors` — Xato belgilash (`category`: SPELLING, ARTICLE, TENSE, WORD_USAGE, WORD_ORDER, GRAMMAR, PUNCTUATION, OTHER)
+- `POST /api/online-exams/{assignmentId}/submissions/{studentId}/result` — Natija; e'lon qilingan ball o'zgarsa `changeReason` majburiy

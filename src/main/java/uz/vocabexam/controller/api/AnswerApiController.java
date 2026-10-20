@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.*;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import uz.vocabexam.entity.ErrorCategory;
 import uz.vocabexam.exception.BadRequestException;
 import uz.vocabexam.service.AnswerCheckService;
 import java.util.*;
@@ -19,6 +20,7 @@ public class AnswerApiController {
             answerCheckService.addError(answerId,
                 requireInt(body, "errorStart"),
                 requireInt(body, "errorEnd"),
+                parseCategory(body.get("category")),
                 (String)  body.get("comment"),
                 (String)  body.get("correctHint")));
     }
@@ -41,6 +43,12 @@ public class AnswerApiController {
         if (score == null) throw new BadRequestException("score majburiy");
         answerCheckService.setScore(answerId, score);
         return ResponseEntity.ok(Map.of("answerId", answerId, "score", body.get("score")));
+    }
+
+    static ErrorCategory parseCategory(Object raw) {
+        if (raw == null || raw.toString().isBlank()) return null;
+        try { return ErrorCategory.valueOf(raw.toString()); }
+        catch (IllegalArgumentException e) { throw new BadRequestException("Noma'lum xato turi: " + raw); }
     }
 
     static int requireInt(Map<String,Object> body, String key) {

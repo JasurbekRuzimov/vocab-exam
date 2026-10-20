@@ -10,3 +10,11 @@ body { background: #f5f7fa; font-family: 'Segoe UI', sans-serif; }
 .badge { font-weight: 500; }
 .answer-text { font-size: 1rem; line-height: 1.7; white-space: pre-wrap; word-break: break-word; }
 .error-highlight { background: #ffd0d0; border-radius: 3px; padding: 0 2px; text-decoration: underline wavy red; }
+
+/* Tekshirish oynasi: javobdagi so'zlar bosiladigan bo'laklar */
+.tok { cursor: pointer; border-radius: 3px; padding: 0 1px; transition: background .1s; }
+.tok:hover { background: #e7f0fb; }
+.tok.err { background: #ffd0d0; text-decoration: underline wavy #dc3545; text-underline-offset: 3px; }
+.tok.sel { background: #fff3a8; outline: 2px solid #f0c000; }
+.error-highlight { cursor: help; text-underline-offset: 3px; }
+.err-cat { font-size: .7rem; }
