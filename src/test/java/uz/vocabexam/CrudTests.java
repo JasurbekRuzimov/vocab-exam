@@ -96,6 +96,10 @@ class CrudTests {
         changes.save(ResultChange.builder().result(result).changedBy(teacher)
             .oldScore(4).oldMax(10).newScore(5).newMax(10).reason("qayta ko'rildi").build());
         notifications.save(Notification.builder().user(student).type(NotificationType.EXAM_ASSIGNED).message("yangi imtihon").build());
+        notifications.save(Notification.builder().user(student).type(NotificationType.EXAM_ASSIGNED).message("Unit 1 quiz")
+            .link("/student/exams/" + groupAssignment.getId() + "/take").build());
+        notifications.save(Notification.builder().user(student).type(NotificationType.RESULT_READY).message("natija")
+            .link("/student/results/" + result.getId()).build());
     }
 
     // ── Imtihon sahifasi ─────────────────────────────────────────────────────
@@ -122,6 +126,7 @@ class CrudTests {
         assertThat(attempts.count()).isZero();
         assertThat(results.count()).isZero();
         assertThat(changes.count()).isZero();
+        assertThat(notifications.count()).isEqualTo(1); // havolasiz umumiy bildirishnoma qoladi
         // So'zlar to'plami joyida qoladi
         assertThat(wordSets.findById(wordSet.getId())).isPresent();
     }

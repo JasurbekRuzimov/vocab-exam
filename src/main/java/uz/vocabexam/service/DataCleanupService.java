@@ -19,6 +19,11 @@ public class DataCleanupService {
     @Transactional
     public void purgeAssignments(Collection<UUID> assignmentIds) {
         if (assignmentIds.isEmpty()) return;
+        // O'chgan topshiriq yoki natijaga olib boradigan bildirishnomalar ham kerak emas
+        List<UUID> resultIds = em.createQuery("SELECT r.id FROM ExamResult r WHERE r.assignment.id IN :ids", UUID.class)
+            .setParameter("ids", assignmentIds).getResultList();
+        for (UUID id : concat(assignmentIds, resultIds))
+            em.createQuery("DELETE FROM Notification n WHERE n.link LIKE :p").setParameter("p", "%" + id + "%").executeUpdate();
         exec("DELETE FROM AnswerError e WHERE e.answer.id IN "
             + "(SELECT a.id FROM OnlineAnswer a WHERE a.assignment.id IN :ids)", assignmentIds);
         exec("DELETE FROM OnlineAnswer a WHERE a.assignment.id IN :ids", assignmentIds);
@@ -60,6 +65,10 @@ public class DataCleanupService {
             .setParameter("id", userId).executeUpdate();
         em.flush();
         em.clear();
+    }
+
+    private static List<UUID> concat(Collection<UUID> a, Collection<UUID> b) {
+        List<UUID> all = new ArrayList<>(a); all.addAll(b); return all;
     }
 
     private void exec(String jpql, Collection<UUID> ids) {

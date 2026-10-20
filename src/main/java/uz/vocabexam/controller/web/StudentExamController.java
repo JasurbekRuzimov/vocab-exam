@@ -31,6 +31,12 @@ public class StudentExamController {
         return "student/exams";
     }
 
+    /** Eski bildirishnomalardagi havola uchun. */
+    @GetMapping("/exams/{assignmentId}")
+    public String examLink(@PathVariable UUID assignmentId) {
+        return "redirect:/student/exams/" + assignmentId + "/take";
+    }
+
     @GetMapping("/exams/{assignmentId}/take")
     public String takeExam(@PathVariable UUID assignmentId, Model model) {
         UUID studentId = SecurityUtils.currentUserId();

@@ -53,7 +53,7 @@ public class AssignmentService {
             created.add(a);
             group.getStudents().forEach(s -> notificationService.send(s.getId(),
                 NotificationType.EXAM_ASSIGNED, "Sizga yangi imtihon topshirildi: " + exam.getTitle(),
-                "/student/exams/" + a.getId()));
+                "/student/exams/" + a.getId() + "/take"));
         } else {
             User student = userRepository.findById(targetId).orElseThrow(() -> new ResourceNotFoundException("Student topilmadi"));
             if (student.getRole() != Role.STUDENT) throw new BadRequestException("Tanlangan foydalanuvchi o'quvchi emas");
@@ -63,7 +63,7 @@ public class AssignmentService {
                 .exam(exam).targetType(TargetType.STUDENT).student(student).deadline(deadline).build());
             created.add(a);
             notificationService.send(student.getId(), NotificationType.EXAM_ASSIGNED,
-                "Sizga yangi imtihon topshirildi: " + exam.getTitle(), "/student/exams/" + a.getId());
+                "Sizga yangi imtihon topshirildi: " + exam.getTitle(), "/student/exams/" + a.getId() + "/take");
         }
         return created;
     }
