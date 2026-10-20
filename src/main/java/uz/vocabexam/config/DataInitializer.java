@@ -21,8 +21,8 @@ public class DataInitializer implements CommandLineRunner {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    @Value("${app.admin.email:admin@vocabexam.uz}")
-    private String adminEmail;
+    @Value("${app.admin.username:admin}")
+    private String adminUsername;
 
     @Value("${app.admin.password:}")
     private String configuredPassword;
@@ -34,7 +34,7 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void initAdmin() {
-        userRepository.findByEmail(adminEmail).ifPresentOrElse(
+        userRepository.findByUsername(adminUsername).ifPresentOrElse(
             admin -> {
                 // Migratsiyadagi PLACEHOLDER hash bo'lsa — haqiqiy parol o'rnatamiz
                 String hash = admin.getPasswordHash();
@@ -46,13 +46,13 @@ public class DataInitializer implements CommandLineRunner {
                     admin.setLockedUntil(null);
                     userRepository.save(admin);
                 } else {
-                    log.info("Admin topildi: {}", adminEmail);
+                    log.info("Admin topildi: {}", adminUsername);
                 }
             },
             () -> {
                 User admin = User.builder()
                     .fullName("Super Admin")
-                    .email(adminEmail)
+                    .username(adminUsername)
                     .passwordHash(passwordEncoder.encode(resolvePassword()))
                     .role(Role.SUPER_ADMIN)
                     .active(true)
@@ -66,14 +66,14 @@ public class DataInitializer implements CommandLineRunner {
     /** ADMIN_PASSWORD berilgan bo'lsa o'shani, aks holda tasodifiy parol (logga bir marta chiqadi). */
     private String resolvePassword() {
         if (configuredPassword != null && !configuredPassword.isBlank()) {
-            log.info("Admin parol o'rnatildi (ADMIN_PASSWORD). Email: {}", adminEmail);
+            log.info("Admin parol o'rnatildi (ADMIN_PASSWORD). Login: {}", adminUsername);
             return configuredPassword;
         }
         byte[] bytes = new byte[12];
         new SecureRandom().nextBytes(bytes);
         String generated = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
-        log.warn("Admin uchun vaqtinchalik parol yaratildi. Email: {} | Parol: {} — kirgandan keyin almashtiring!",
-            adminEmail, generated);
+        log.warn("Admin uchun vaqtinchalik parol yaratildi. Login: {} | Parol: {} — kirgandan keyin almashtiring!",
+            adminUsername, generated);
         return generated;
     }
 }

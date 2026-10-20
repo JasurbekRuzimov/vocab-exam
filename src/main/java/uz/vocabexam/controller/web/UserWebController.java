@@ -39,10 +39,11 @@ public class UserWebController {
 
     @PostMapping
     public String create(@RequestParam String fullName,
-                         @RequestParam String email,
+                         @RequestParam String username,
+                         @RequestParam(required = false) String email,
                          @RequestParam String password,
                          @RequestParam Role role) {
-        userService.create(fullName, email, password, role);
+        userService.create(fullName, username, email, password, role);
         return "redirect:/admin/users?success=true";
     }
 
@@ -56,9 +57,10 @@ public class UserWebController {
     @PostMapping("/{id}/update")
     public String update(@PathVariable UUID id,
                          @RequestParam String fullName,
-                         @RequestParam String email,
+                         @RequestParam String username,
+                         @RequestParam(required = false) String email,
                          @RequestParam Role role) {
-        userService.update(id, fullName, email, role);
+        userService.update(id, fullName, username, email, role);
         return "redirect:/admin/users?success=true";
     }
 }

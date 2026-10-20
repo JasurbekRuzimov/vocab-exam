@@ -25,7 +25,7 @@ public class UserApiController {
 
     @PostMapping
     public ResponseEntity<?> create(@RequestBody Map<String,String> body) {
-        User u = userService.create(body.get("fullName"), body.get("email"),
+        User u = userService.create(body.get("fullName"), body.get("username"), body.get("email"),
             body.get("password"), Role.valueOf(body.get("role")));
         return ResponseEntity.status(HttpStatus.CREATED).body(u);
     }
@@ -38,7 +38,7 @@ public class UserApiController {
     @PutMapping("/{id}")
     public ResponseEntity<?> update(@PathVariable UUID id, @RequestBody Map<String,String> body) {
         return ResponseEntity.ok(userService.update(id, body.get("fullName"),
-            body.get("email"), Role.valueOf(body.get("role"))));
+            body.get("username"), body.get("email"), Role.valueOf(body.get("role"))));
     }
 
     @DeleteMapping("/{id}")

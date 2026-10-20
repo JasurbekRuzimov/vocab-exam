@@ -21,7 +21,7 @@
         <tbody>
           <tr th:each="s : ${group.students}">
             <td class="fw-semibold" th:text="${s.fullName}"></td>
-            <td class="text-muted small" th:text="${s.email}"></td>
+            <td class="text-muted small" th:text="${s.username}"></td>
             <td class="text-end">
               <button class="btn btn-sm text-danger p-1 border-0 bg-transparent remove-student"
                       th:data-student-id="${s.id}" th:data-group-id="${group.id}">
@@ -41,7 +41,7 @@
       <div class="modal-header"><h6 class="modal-title">O'quvchi qo'shish</h6><button class="btn-close" data-bs-dismiss="modal"></button></div>
       <div class="modal-body">
         <select id="studentSelect" class="form-select" multiple size="8">
-          <option th:each="s : ${students}" th:value="${s.id}" th:text="${s.fullName} + ' (' + ${s.email} + ')'"></option>
+          <option th:each="s : ${students}" th:value="${s.id}" th:text="${s.fullName} + ' (' + ${s.username} + ')'"></option>
         </select>
       </div>
       <div class="modal-footer">

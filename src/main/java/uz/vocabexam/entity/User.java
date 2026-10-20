@@ -21,7 +21,12 @@ public class User {
     @Column(name = "full_name", nullable = false)
     private String fullName;
 
-    @Column(nullable = false, unique = true)
+    /** Kirish uchun login: kichik harflar, raqamlar, . _ - (3-50 belgi). */
+    @Column(nullable = false, unique = true, length = 50)
+    private String username;
+
+    /** Ixtiyoriy: bildirishnomalar va parolni tiklash uchun. */
+    @Column(unique = true)
     private String email;
 
     @JsonIgnore

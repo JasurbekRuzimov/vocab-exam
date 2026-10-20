@@ -21,17 +21,17 @@ public class AuthApiController {
     public ResponseEntity<?> login(@RequestBody Map<String,String> body, HttpSession session) {
         try {
             Authentication auth = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(body.get("email"), body.get("password")));
+                new UsernamePasswordAuthenticationToken(body.get("username"), body.get("password")));
             SecurityContextHolder.getContext().setAuthentication(auth);
             session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
                 SecurityContextHolder.getContext());
             CustomUserDetails ud = (CustomUserDetails) auth.getPrincipal();
             userService.recordSuccessLogin(ud.getId());
             return ResponseEntity.ok(Map.of("id", ud.getId(), "fullName", ud.getFullName(),
-                "email", ud.getEmail(), "role", ud.getRole()));
+                "username", ud.getUsername(), "role", ud.getRole()));
         } catch (BadCredentialsException e) {
-            userService.recordFailedLogin(body.get("email"), 5, 15);
-            return ResponseEntity.status(401).body(Map.of("message", "Email yoki parol noto'g'ri"));
+            userService.recordFailedLogin(body.get("username"), 5, 15);
+            return ResponseEntity.status(401).body(Map.of("message", "Login yoki parol noto'g'ri"));
         } catch (LockedException e) {
             return ResponseEntity.status(423).body(Map.of("message", "Akkaunt vaqtincha bloklangan"));
         }
@@ -42,7 +42,7 @@ public class AuthApiController {
         CustomUserDetails ud = SecurityUtils.currentUser();
         if (ud == null) return ResponseEntity.status(401).body(Map.of("message", "Kiring"));
         return ResponseEntity.ok(Map.of("id", ud.getId(), "fullName", ud.getFullName(),
-            "email", ud.getEmail(), "role", ud.getRole()));
+            "username", ud.getUsername(), "role", ud.getRole()));
     }
 
     @PostMapping("/change-password")
