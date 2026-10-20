@@ -72,9 +72,10 @@
     const examId = /*[[${exam.id}]]*/ '';
     let groups = [], students = [];
     async function loadTargets() {
-      const [gR, sR] = await Promise.all([fetch('/api/groups'), fetch('/api/users?role=STUDENT&size=200')]);
-      groups = (await gR.json()) || [];
-      const sd = await sR.json(); students = sd.content || sd || [];
+      // O'qituvchining guruhlari va o'z markazidagi o'quvchilar
+      const [gR, sR] = await Promise.all([fetch('/api/groups'), fetch('/api/students')]);
+      groups   = gR.ok ? await gR.json() : [];
+      students = sR.ok ? await sR.json() : [];
       updateSelect();
     }
     function updateSelect() {

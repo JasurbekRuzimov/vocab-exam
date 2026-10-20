@@ -30,9 +30,17 @@
             </div>
             <div class="mb-4">
               <label class="form-label">Rol *</label>
-              <select name="role" class="form-select" required>
-                <option th:each="r : ${roles}" th:value="${r}" th:text="${r}"
-                        th:selected="${user != null and r == user.role}"></option>
+              <select name="role" id="roleSelect" class="form-select" required>
+                <option th:each="r : ${roles}" th:value="${r}" th:text="${r.label}"
+                        th:selected="${user != null ? r == user.role : r.name() == 'STUDENT'}"></option>
+              </select>
+            </div>
+            <!-- Platforma admini foydalanuvchi qaysi markazga tegishli ekanini tanlaydi -->
+            <div class="mb-4" id="centerField" th:if="${centers != null}">
+              <label class="form-label">Markaz *</label>
+              <select name="centerId" class="form-select">
+                <option th:each="c : ${centers}" th:value="${c.id}" th:text="${c.name}"
+                        th:selected="${user != null and c.id == user.centerId}"></option>
               </select>
             </div>
             <div class="d-flex gap-2">
@@ -44,5 +52,11 @@
       </div>
     </div>
   </div>
+  <script>
+    // Platforma admini markazga tegishli emas
+    const roleSel = document.getElementById('roleSelect'), centerField = document.getElementById('centerField');
+    function syncCenter() { if (centerField) centerField.classList.toggle('d-none', roleSel.value === 'SUPER_ADMIN'); }
+    roleSel.addEventListener('change', syncCenter); syncCenter();
+  </script>
 </main></body>
 </html>

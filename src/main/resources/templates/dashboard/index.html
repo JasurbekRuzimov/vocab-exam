@@ -7,6 +7,11 @@
   <h4 class="fw-bold mb-4">Xush kelibsiz! <span sec:authentication="name"></span></h4>
 
   <th:block sec:authorize="hasRole('SUPER_ADMIN')">
+    <a th:href="@{/admin/centers}" class="card border-0 shadow-sm p-3 mb-3 text-decoration-none text-dark d-flex flex-row align-items-center gap-3">
+      <i class="bi bi-buildings fs-3 text-primary"></i>
+      <div><div class="fw-semibold"><span th:text="${stats?.get('totalCenters') ?: 0}"></span> ta o'quv markazi</div>
+        <small class="text-muted">Markazlarni boshqarish</small></div>
+    </a>
     <div class="row g-3 mb-4">
       <div class="col-sm-6 col-lg-3">
         <div class="card border-0 shadow-sm text-center p-3">
@@ -35,6 +40,89 @@
           <h3 class="fw-bold" th:text="${stats?.get('totalResults') ?: 0}">0</h3>
           <small class="text-muted">Natijalar</small>
         </div>
+      </div>
+    </div>
+  </th:block>
+
+  <th:block sec:authorize="hasRole('CENTER_ADMIN')" th:if="${centerSummary != null}">
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-lg-3">
+        <div class="card border-0 shadow-sm p-3 h-100">
+          <small class="text-muted">O'quvchilar</small>
+          <div class="fs-3 fw-bold" th:text="${centerSummary.students}"></div>
+          <small class="text-muted" th:text="${centerSummary.groups} + ' ta guruh'"></small>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="card border-0 shadow-sm p-3 h-100">
+          <small class="text-muted">O'qituvchilar</small>
+          <div class="fs-3 fw-bold" th:text="${centerSummary.teachers}"></div>
+          <small class="text-muted" th:text="${centerSummary.exams} + ' ta imtihon'"></small>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="card border-0 shadow-sm p-3 h-100">
+          <small class="text-muted">O'rtacha natija</small>
+          <div class="fs-3 fw-bold" th:text="${centerSummary.avgPercent != null ? centerSummary.avgPercent + '%' : '—'}"></div>
+          <small class="text-muted" th:text="${centerSummary.graded} + ' ta baholangan ish'"></small>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="card border-0 shadow-sm p-3 h-100">
+          <small class="text-muted">Tekshirish kutilmoqda</small>
+          <div class="fs-3 fw-bold" th:classappend="${centerSummary.pending > 0} ? 'text-warning' : ''" th:text="${centerSummary.pending}"></div>
+          <small class="text-muted">barcha o'qituvchilarda</small>
+        </div>
+      </div>
+    </div>
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-header bg-white fw-semibold">O'qituvchilar</div>
+      <div class="table-responsive">
+        <table class="table table-hover mb-0 align-middle">
+          <thead class="table-light">
+            <tr><th>O'qituvchi</th><th>Imtihonlar</th><th>Baholangan</th><th>O'rtacha natija</th><th>Kutilmoqda</th></tr>
+          </thead>
+          <tbody>
+            <tr th:each="r : ${centerSummary.rows}">
+              <td><div class="fw-semibold" th:text="${r.teacher.fullName}"></div>
+                  <small class="text-muted" th:text="${r.teacher.username}"></small></td>
+              <td th:text="${r.exams}"></td>
+              <td th:text="${r.graded}"></td>
+              <td>
+                <div class="d-flex align-items-center gap-2" th:if="${r.avgPercent != null}">
+                  <div class="progress flex-grow-1" style="height:6px;max-width:120px">
+                    <div class="progress-bar" th:classappend="${r.avgPercent < 50} ? 'bg-danger' : (${r.avgPercent < 70} ? 'bg-warning' : 'bg-success')"
+                         th:style="'width:' + ${r.avgPercent} + '%'"></div>
+                  </div>
+                  <small th:text="${r.avgPercent} + '%'"></small>
+                </div>
+                <span th:if="${r.avgPercent == null}" class="text-muted">—</span>
+              </td>
+              <td><span th:if="${r.pending > 0}" class="badge bg-warning text-dark" th:text="${r.pending}"></span>
+                  <span th:if="${r.pending == 0}" class="text-muted">—</span></td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(centerSummary.rows)}">
+              <td colspan="5" class="text-center text-muted py-4">
+                Hali o'qituvchi yo'q. <a th:href="@{/admin/users/new}">O'qituvchi qo'shish</a>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <h6 class="text-muted mb-3">Tezkor harakatlar</h6>
+    <div class="row g-3 mb-4">
+      <div class="col-sm-4">
+        <a th:href="@{/admin/users/new}" class="card border-0 shadow-sm p-3 text-decoration-none text-dark d-flex flex-row align-items-center gap-3">
+          <i class="bi bi-person-plus fs-3 text-primary"></i>
+          <div class="fw-semibold">Foydalanuvchi qo'shish</div>
+        </a>
+      </div>
+      <div class="col-sm-4">
+        <a th:href="@{/admin/groups/new}" class="card border-0 shadow-sm p-3 text-decoration-none text-dark d-flex flex-row align-items-center gap-3">
+          <i class="bi bi-diagram-3 fs-3 text-success"></i>
+          <div class="fw-semibold">Guruh yaratish</div>
+        </a>
       </div>
     </div>
   </th:block>

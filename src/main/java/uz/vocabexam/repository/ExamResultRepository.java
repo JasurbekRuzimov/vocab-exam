@@ -14,4 +14,10 @@ public interface ExamResultRepository extends JpaRepository<ExamResult, UUID> {
     Double avgScoreByAssignmentId(@Param("assignmentId") UUID assignmentId);
     @Query("SELECT AVG(r.totalScore) FROM ExamResult r WHERE r.student.id = :studentId")
     Double avgScoreByStudentId(@Param("studentId") UUID studentId);
+    /** Markaz statistikasi: [o'qituvchi id, natijalar soni, o'rtacha foiz]. */
+    @Query("""
+        SELECT r.assignment.exam.teacher.id, COUNT(r), AVG(100.0 * r.totalScore / r.maxScore) FROM ExamResult r
+        WHERE r.assignment.exam.teacher.center.id = :centerId AND r.maxScore > 0
+        GROUP BY r.assignment.exam.teacher.id""")
+    List<Object[]> statsByTeacherInCenter(@Param("centerId") UUID centerId);
 }

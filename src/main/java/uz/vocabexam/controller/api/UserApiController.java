@@ -10,7 +10,7 @@ import uz.vocabexam.service.UserService;
 import java.util.*;
 
 @RestController @RequestMapping("/api/users")
-@RequiredArgsConstructor @PreAuthorize("hasRole('SUPER_ADMIN')")
+@RequiredArgsConstructor @PreAuthorize("hasAnyRole('SUPER_ADMIN','CENTER_ADMIN')")
 public class UserApiController {
     private final UserService userService;
 
@@ -18,27 +18,28 @@ public class UserApiController {
     public ResponseEntity<?> getAll(
             @RequestParam(required=false) Role role,
             @RequestParam(required=false) String search,
+            @RequestParam(required=false) UUID centerId,
             @RequestParam(defaultValue="0")  int page,
             @RequestParam(defaultValue="20") int size) {
-        return ResponseEntity.ok(userService.getAll(role, search, PageRequest.of(page, size)));
+        return ResponseEntity.ok(userService.getAll(role, search, centerId, PageRequest.of(page, size)));
     }
 
     @PostMapping
     public ResponseEntity<?> create(@RequestBody Map<String,String> body) {
         User u = userService.create(body.get("fullName"), body.get("username"), body.get("email"),
-            body.get("password"), Role.valueOf(body.get("role")));
+            body.get("password"), Role.valueOf(body.get("role")), uuidOrNull(body.get("centerId")));
         return ResponseEntity.status(HttpStatus.CREATED).body(u);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getOne(@PathVariable UUID id) {
-        return ResponseEntity.ok(userService.getById(id));
+        return ResponseEntity.ok(userService.getManaged(id));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<?> update(@PathVariable UUID id, @RequestBody Map<String,String> body) {
         return ResponseEntity.ok(userService.update(id, body.get("fullName"),
-            body.get("username"), body.get("email"), Role.valueOf(body.get("role"))));
+            body.get("username"), body.get("email"), Role.valueOf(body.get("role")), uuidOrNull(body.get("centerId"))));
     }
 
     @DeleteMapping("/{id}")
@@ -57,6 +58,10 @@ public class UserApiController {
     public ResponseEntity<?> unblock(@PathVariable UUID id) {
         userService.unblock(id);
         return ResponseEntity.ok(Map.of("message", "Akkaunt blokdan chiqarildi"));
+    }
+
+    private static UUID uuidOrNull(String s) {
+        return s == null || s.isBlank() ? null : UUID.fromString(s);
     }
 
     @PatchMapping("/{id}/reset-password")

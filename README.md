@@ -36,14 +36,22 @@ mvn spring-boot:run
 ## Rollar
 | Rol | Vakolat |
 |-----|---------|
-| SUPER_ADMIN | Barcha foydalanuvchilar, guruhlar, statistika |
+| SUPER_ADMIN | Platforma admini: o'quv markazlarini yaratadi, yoqadi/o'chiradi, barcha foydalanuvchilar |
+| CENTER_ADMIN | Markaz direktori: o'z markazidagi foydalanuvchi va guruhlar, o'qituvchilar statistikasi |
 | TEACHER | O'z guruhlari, so'zlar, imtihonlar, javoblarni tekshirish |
 | STUDENT | Imtihon topshirish, natijalarni ko'rish |
 
+## Ko'p markazli tizim
+Bitta server bir nechta o'quv markaziga xizmat qiladi. Har foydalanuvchi bitta markazga tegishli
+(platforma admini bundan mustasno) va faqat o'z markazi ma'lumotini ko'radi. Guruh, so'z to'plami va
+imtihonlar markazni o'z o'qituvchisi orqali oladi. Markazning nomi, logotipi va rangi sahifada ko'rinadi.
+O'chirilgan markaz foydalanuvchilari tizimga kira olmaydi. Yangilashda mavjud ma'lumotlar "Asosiy markaz"ga o'tadi.
+
 ## Asosiy sahifalar
 - `/` — Dashboard
-- `/admin/users` — Foydalanuvchilar (Admin)
-- `/admin/groups` — Guruhlar (Admin)
+- `/admin/centers` — O'quv markazlari (platforma admini)
+- `/admin/users` — Foydalanuvchilar (platforma admini yoki markaz direktori)
+- `/admin/groups` — Guruhlar (platforma admini yoki markaz direktori)
 - `/teacher/word-sets` — So'zlar to'plamlari
 - `/teacher/exams` — Imtihonlar
 - `/teacher/exams/{assignmentId}/submissions` — Jonli monitoring va statistika (har 10 soniyada yangilanadi)

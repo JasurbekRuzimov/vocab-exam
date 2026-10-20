@@ -42,8 +42,8 @@ public class SecurityConfig {
             .csrf(csrf -> {})
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/login", "/css/**", "/js/**", "/images/**", "/favicon.ico").permitAll()
-                .requestMatchers("/admin/**").hasRole("SUPER_ADMIN")
-                .requestMatchers("/api/users/**").hasRole("SUPER_ADMIN")
+                .requestMatchers("/admin/centers/**").hasRole("SUPER_ADMIN")
+                .requestMatchers("/admin/**", "/api/users/**").hasAnyRole("SUPER_ADMIN", "CENTER_ADMIN")
                 .requestMatchers("/teacher/**",
                     "/api/word-sets/**", "/api/exams/**",
                     "/api/assignments/**", "/api/answers/**").hasAnyRole("SUPER_ADMIN", "TEACHER")
@@ -54,7 +54,9 @@ public class SecurityConfig {
                 .loginPage("/login")
                 .loginProcessingUrl("/login")
                 .defaultSuccessUrl("/dashboard", true)
-                .failureUrl("/login?error=true")
+                // Bloklangan akkaunt yoki o'chirilgan markaz uchun aniq xabar ko'rsatamiz
+                .failureHandler((req, res, ex) -> res.sendRedirect(req.getContextPath() + "/login?" +
+                    (ex instanceof DisabledException ? "disabled=true" : ex instanceof LockedException ? "locked=true" : "error=true")))
                 .usernameParameter("username")
                 .passwordParameter("password")
                 .permitAll()

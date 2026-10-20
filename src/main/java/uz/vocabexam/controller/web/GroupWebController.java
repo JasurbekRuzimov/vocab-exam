@@ -6,14 +6,14 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import uz.vocabexam.entity.Role;
+import uz.vocabexam.entity.*;
 import uz.vocabexam.service.*;
 import java.util.UUID;
 
 @Controller
 @RequestMapping("/admin/groups")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('SUPER_ADMIN')")
+@PreAuthorize("hasAnyRole('SUPER_ADMIN','CENTER_ADMIN')")
 public class GroupWebController {
 
     private final GroupService groupService;
@@ -21,7 +21,7 @@ public class GroupWebController {
 
     @GetMapping
     public String list(Model model) {
-        model.addAttribute("groups", groupService.getAll(null));
+        model.addAttribute("groups", groupService.getManagedList());
         return "groups/list";
     }
 
@@ -40,9 +40,11 @@ public class GroupWebController {
 
     @GetMapping("/{id}")
     public String detail(@PathVariable UUID id, Model model) {
-        model.addAttribute("group", groupService.getById(id));
+        Group group = groupService.getManaged(id);
+        model.addAttribute("group", group);
+        // Faqat guruh markazidagi o'quvchilarni qo'shish mumkin
         model.addAttribute("students",
-            userService.getAll(Role.STUDENT, null, PageRequest.of(0, 500)).getContent());
+            userService.getAll(Role.STUDENT, null, group.getTeacher().getCenterId(), PageRequest.of(0, 500)).getContent());
         return "groups/detail";
     }
 }

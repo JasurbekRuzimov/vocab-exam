@@ -37,6 +37,12 @@ public class User {
     @Column(nullable = false)
     private Role role;
 
+    /** Foydalanuvchi tegishli markaz; platforma adminida null. */
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "center_id")
+    private Center center;
+
     @Builder.Default
     @Column(name = "is_active", nullable = false)
     private boolean active = true;
@@ -58,6 +64,14 @@ public class User {
     private LocalDateTime lastLogin;
 
 
+
+    public UUID getCenterId() {
+        return center != null ? center.getId() : null;
+    }
+
+    public String getCenterName() {
+        return center != null ? center.getName() : null;
+    }
 
     public boolean isLocked() {
         return lockedUntil != null && lockedUntil.isAfter(LocalDateTime.now());
