@@ -18,8 +18,8 @@ public class ResultApiController {
                                          @RequestBody Map<String,Object> body) {
         return ResponseEntity.status(HttpStatus.CREATED).body(
             answerCheckService.saveResult(assignmentId, studentId,
-                (Integer) body.get("totalScore"),
-                body.containsKey("maxScore") ? (Integer) body.get("maxScore") : 100,
+                AnswerApiController.requireInt(body, "totalScore"),
+                body.get("maxScore") != null ? AnswerApiController.requireInt(body, "maxScore") : 100,
                 (String)  body.get("comment")));
     }
 }

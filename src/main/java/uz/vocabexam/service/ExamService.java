@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import uz.vocabexam.entity.*;
 import uz.vocabexam.exception.*;
 import uz.vocabexam.repository.*;
+import uz.vocabexam.security.SecurityUtils;
 import java.io.IOException;
 import java.util.*;
 
@@ -28,7 +29,14 @@ public class ExamService {
         return examRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Imtihon topilmadi"));
     }
     public void checkOwnership(Exam exam, UUID teacherId) {
+        if (SecurityUtils.isAdmin()) return;
         if (!exam.getTeacher().getId().equals(teacherId)) throw new AccessForbiddenException("Ruxsat yo'q");
+    }
+    /** Imtihonni faqat egasi (yoki admin) uchun qaytaradi. */
+    public Exam getOwned(UUID id) {
+        Exam exam = getById(id);
+        SecurityUtils.assertOwnerOrAdmin(exam.getTeacher().getId());
+        return exam;
     }
 
     @Transactional
@@ -37,6 +45,7 @@ public class ExamService {
         validateParams(questionCount, variantCount);
         WordSet ws = wordSetRepository.findById(wordSetId)
             .orElseThrow(() -> new ResourceNotFoundException("So'zlar to'plami topilmadi"));
+        SecurityUtils.assertOwnerOrAdmin(ws.getTeacher().getId());
         List<Word> allWords = wordRepository.findByWordSetId(wordSetId);
         if (allWords.size() < questionCount)
             throw new BadRequestException("Faylda " + allWords.size() + " so'z bor, " + questionCount + " so'z so'raldi");

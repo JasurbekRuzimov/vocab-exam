@@ -24,6 +24,7 @@ public class User {
     @Column(nullable = false, unique = true)
     private String email;
 
+    @JsonIgnore
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
@@ -35,10 +36,12 @@ public class User {
     @Column(name = "is_active", nullable = false)
     private boolean active = true;
 
+    @JsonIgnore
     @Builder.Default
     @Column(name = "login_attempts", nullable = false)
     private int loginAttempts = 0;
 
+    @JsonIgnore
     @Column(name = "locked_until")
     private LocalDateTime lockedUntil;
 

@@ -1,11 +1,13 @@
 package uz.vocabexam.exception;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.util.*;
 
-@RestControllerAdvice
+@RestControllerAdvice @Slf4j
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResourceNotFoundException.class)
@@ -23,9 +25,16 @@ public class GlobalExceptionHandler {
         return response(HttpStatus.FORBIDDEN, ex.getMessage());
     }
 
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<Map<String,Object>> accessDenied(AccessDeniedException ex) {
+        return response(HttpStatus.FORBIDDEN, "Ruxsat yo'q");
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String,Object>> general(Exception ex) {
-        return response(HttpStatus.INTERNAL_SERVER_ERROR, "Server xatosi: " + ex.getMessage());
+        // Ichki xato tafsilotlari foydalanuvchiga ko'rsatilmaydi, faqat logga yoziladi
+        log.error("Kutilmagan xato", ex);
+        return response(HttpStatus.INTERNAL_SERVER_ERROR, "Server xatosi yuz berdi");
     }
 
     private ResponseEntity<Map<String,Object>> response(HttpStatus status, String message) {

@@ -23,7 +23,7 @@ public class OnlineExamApiController {
     public ResponseEntity<?> start(@PathVariable UUID assignmentId) {
         UUID studentId = SecurityUtils.currentUserId();
         ExamAssignment a = onlineExamService.getAssignmentForStudent(assignmentId, studentId);
-        List<Word> words = onlineExamService.getExamWords(a);
+        List<Word> words = onlineExamService.getExamWords(a, studentId);
         List<OnlineAnswer> savedAnswers = onlineExamService.getStudentAnswers(assignmentId, studentId);
         Map<UUID, String> savedMap = new HashMap<>();
         savedAnswers.forEach(ans -> savedMap.put(ans.getWord().getId(), ans.getAnswerText()));
@@ -33,11 +33,15 @@ public class OnlineExamApiController {
             m.put("savedAnswer", savedMap.get(w.getId()));
             return m;
         }).toList();
-        return ResponseEntity.ok(Map.of("assignmentId", assignmentId,
-            "examTitle", a.getExam().getTitle(),
-            "deadline", a.getDeadline(),
-            "words", wordList,
-            "totalWords", words.size()));
+        // LinkedHashMap: deadline null bo'lishi mumkin (Map.of null qabul qilmaydi)
+        Map<String,Object> body = new LinkedHashMap<>();
+        body.put("assignmentId", assignmentId);
+        body.put("examTitle", a.getExam().getTitle());
+        body.put("deadline", a.getDeadline());
+        body.put("words", wordList);
+        body.put("totalWords", words.size());
+        body.put("submitted", onlineExamService.hasSubmitted(assignmentId, studentId));
+        return ResponseEntity.ok(body);
     }
 
     @PutMapping("/{assignmentId}/answers/{wordId}") @PreAuthorize("hasRole('STUDENT')")
@@ -55,11 +59,13 @@ public class OnlineExamApiController {
 
     @GetMapping("/{assignmentId}/submissions") @PreAuthorize("hasAnyRole('TEACHER','SUPER_ADMIN')")
     public ResponseEntity<?> getSubmissions(@PathVariable UUID assignmentId) {
+        assignmentService.getOwned(assignmentId);
         return ResponseEntity.ok(onlineExamService.getSubmittedStudents(assignmentId));
     }
 
     @GetMapping("/{assignmentId}/submissions/{studentId}") @PreAuthorize("hasAnyRole('TEACHER','SUPER_ADMIN')")
     public ResponseEntity<?> getStudentAnswers(@PathVariable UUID assignmentId, @PathVariable UUID studentId) {
+        assignmentService.getOwned(assignmentId);
         return ResponseEntity.ok(onlineExamService.getStudentAnswersForCheck(assignmentId, studentId));
     }
 }

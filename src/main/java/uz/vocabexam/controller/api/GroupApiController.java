@@ -12,7 +12,7 @@ import java.util.*;
 public class GroupApiController {
     private final GroupService groupService;
 
-    @GetMapping
+    @GetMapping @PreAuthorize("hasAnyRole('TEACHER','SUPER_ADMIN')")
     public ResponseEntity<?> getAll() {
         UUID teacherId = SecurityUtils.isAdmin() ? null : SecurityUtils.currentUserId();
         return ResponseEntity.ok(groupService.getAll(teacherId));
@@ -24,9 +24,9 @@ public class GroupApiController {
             .body(groupService.create(body.get("name"), UUID.fromString(body.get("teacherId"))));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id}") @PreAuthorize("hasAnyRole('TEACHER','SUPER_ADMIN')")
     public ResponseEntity<?> getOne(@PathVariable UUID id) {
-        return ResponseEntity.ok(groupService.getById(id));
+        return ResponseEntity.ok(groupService.getOwned(id));
     }
 
     @PutMapping("/{id}") @PreAuthorize("hasRole('SUPER_ADMIN')")
@@ -40,9 +40,9 @@ public class GroupApiController {
         return ResponseEntity.ok(Map.of("message", "Guruh o'chirildi"));
     }
 
-    @GetMapping("/{id}/students")
+    @GetMapping("/{id}/students") @PreAuthorize("hasAnyRole('TEACHER','SUPER_ADMIN')")
     public ResponseEntity<?> getStudents(@PathVariable UUID id) {
-        return ResponseEntity.ok(groupService.getById(id).getStudents());
+        return ResponseEntity.ok(groupService.getOwned(id).getStudents());
     }
 
     @PostMapping("/{id}/students") @PreAuthorize("hasRole('SUPER_ADMIN')")
