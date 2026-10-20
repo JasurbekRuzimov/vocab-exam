@@ -13,6 +13,7 @@ import java.util.*;
 public class OnlineExamApiController {
     private final OnlineExamService onlineExamService;
     private final AssignmentService assignmentService;
+    private final ExamMonitorService monitorService;
 
     @GetMapping("/my") @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<?> myExams() {
@@ -54,6 +55,14 @@ public class OnlineExamApiController {
                                         @RequestBody Map<String,String> body) {
         return ResponseEntity.ok(onlineExamService.saveAnswer(assignmentId, wordId,
             body.get("answerText"), SecurityUtils.currentUserId()));
+    }
+
+    /** Imtihon sahifasidan signal: {"event":"ping"} har 30 soniyada, {"event":"focus-lost"} boshqa oynaga o'tilganda. */
+    @PostMapping("/{assignmentId}/activity") @PreAuthorize("hasRole('STUDENT')")
+    public ResponseEntity<?> activity(@PathVariable UUID assignmentId, @RequestBody(required = false) Map<String,String> body) {
+        boolean focusLost = body != null && "focus-lost".equals(body.get("event"));
+        monitorService.recordActivity(assignmentId, SecurityUtils.currentUserId(), focusLost);
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{assignmentId}/submit") @PreAuthorize("hasRole('STUDENT')")

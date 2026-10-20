@@ -32,6 +32,16 @@ public class AnswerError {
     @Column(name = "correct_hint")
     private String correctHint;
 
+    @Enumerated(EnumType.STRING)
+    @Column(length = 30)
+    private ErrorCategory category;
+
+    /** Xato turining o'zbekcha nomi (eski yozuvlarda null). */
+    public String getCategoryLabel() {
+        return category != null ? category.getLabel() : null;
+    }
+
+    @Builder.Default
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 }

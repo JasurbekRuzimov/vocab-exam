@@ -7,6 +7,7 @@ import java.util.*;
 public interface ExamResultRepository extends JpaRepository<ExamResult, UUID> {
     Optional<ExamResult> findByAssignmentIdAndStudentId(UUID assignmentId, UUID studentId);
     List<ExamResult> findByStudentIdOrderByCheckedAtDesc(UUID studentId);
+    List<ExamResult> findByAssignmentId(UUID assignmentId);
     @Query("SELECT r FROM ExamResult r WHERE r.assignment.exam.teacher.id = :teacherId ORDER BY r.checkedAt DESC")
     List<ExamResult> findByTeacherId(@Param("teacherId") UUID teacherId);
     @Query("SELECT AVG(r.totalScore) FROM ExamResult r WHERE r.assignment.id = :assignmentId")
