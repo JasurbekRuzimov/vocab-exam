@@ -5,6 +5,7 @@ import java.util.*;
 
 public interface GroupRepository extends JpaRepository<Group, UUID> {
     List<Group> findByTeacherId(UUID teacherId);
+    long countByTeacherId(UUID teacherId);
     List<Group> findByTeacher_Center_Id(UUID centerId);
     long countByTeacher_Center_Id(UUID centerId);
     @Query("SELECT g FROM Group g JOIN g.students s WHERE s.id = :studentId")

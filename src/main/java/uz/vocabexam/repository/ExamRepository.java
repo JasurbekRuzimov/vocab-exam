@@ -10,6 +10,7 @@ public interface ExamRepository extends JpaRepository<Exam, UUID> {
     List<Exam> findByTeacherIdAndTypeOrderByCreatedAtDesc(UUID teacherId, ExamType type);
     @Query("SELECT COUNT(e) FROM Exam e WHERE e.teacher.id = :teacherId")
     long countByTeacherId(@Param("teacherId") UUID teacherId);
+    long countByWordSetId(UUID wordSetId);
     /** Markaz statistikasi: [o'qituvchi id, imtihonlar soni]. */
     @Query(
         "SELECT e.teacher.id, COUNT(e) FROM Exam e WHERE e.teacher.center.id = :centerId GROUP BY e.teacher.id")

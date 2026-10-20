@@ -40,7 +40,7 @@ public class ExamWebController {
     public String detail(@PathVariable UUID id, Model model) {
         model.addAttribute("exam",     examService.getOwned(id));
         model.addAttribute("variants", examService.getVariants(id));
-        model.addAttribute("assignments", assignmentService.getByTeacher(SecurityUtils.currentUserId()));
+        model.addAttribute("assignments", assignmentService.getByExam(id));
         return "exams/detail";
     }
 

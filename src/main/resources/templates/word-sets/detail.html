@@ -10,7 +10,17 @@
         <span id="translatedCount" th:text="${#lists.size(words.?[translation != null])}"></span> tasida tarjima bor
       </small>
     </div>
-    <a th:href="@{/teacher/word-sets}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i>Orqaga</a>
+    <div class="d-flex gap-2 flex-shrink-0">
+      <button class="btn btn-outline-secondary btn-sm" title="Nomini o'zgartirish"
+              th:data-api-url="@{'/api/word-sets/' + ${wordSet.id}}" data-api-method="PUT"
+              data-prompt="To'plamning yangi nomi" data-prompt-field="name" th:data-prompt-value="${wordSet.name}">
+        <i class="bi bi-pencil"></i></button>
+      <button class="btn btn-outline-danger btn-sm" title="To'plamni o'chirish"
+              th:data-api-url="@{'/api/word-sets/' + ${wordSet.id}}" data-api-method="DELETE" th:data-redirect="@{/teacher/word-sets}"
+              data-confirm="So'zlar to'plami barcha so'zlari bilan o'chirilsinmi?">
+        <i class="bi bi-trash"></i></button>
+      <a th:href="@{/teacher/word-sets}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i>Orqaga</a>
+    </div>
   </div>
 
   <div class="alert alert-info small py-2" th:if="${#lists.size(words.?[translation == null]) > 0}">
@@ -90,9 +100,10 @@
           [...document.querySelectorAll('.w-translation')].filter(i => i.value.trim()).length;
       }));
       row.querySelector('.delete-word').addEventListener('click', async () => {
-        if (!confirm('O\'chirish?')) return;
-        await fetch(wordsUrl + '/' + row.dataset.wordId, {method:'DELETE'});
-        location.reload();
+        if (!confirm('So\'z o\'chirilsinmi?')) return;
+        const res = await fetch(wordsUrl + '/' + row.dataset.wordId, {method:'DELETE'});
+        if (res.ok) location.reload();
+        else alert((await res.json().catch(() => ({}))).message || 'Xato yuz berdi');
       });
     });
   </script>

@@ -53,6 +53,12 @@ public class ExamApiController {
         return ResponseEntity.ok(examService.getOwned(id));
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<?> rename(@PathVariable UUID id, @RequestBody Map<String,String> body) {
+        examService.rename(id, body.get("title"), SecurityUtils.currentUserId());
+        return ResponseEntity.ok(Map.of("message", "Saqlandi"));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(@PathVariable UUID id) {
         examService.delete(id, SecurityUtils.currentUserId());

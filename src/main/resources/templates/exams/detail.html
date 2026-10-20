@@ -10,7 +10,17 @@
       <span th:if="${exam.type.name() == 'ONLINE'}" th:each="qt : ${exam.questionTypeList}"
             class="badge bg-light text-dark border ms-1" th:text="${qt.label}"></span>
     </div>
-    <a th:href="@{/teacher/exams}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i>Orqaga</a>
+    <div class="d-flex gap-2 flex-shrink-0">
+      <button class="btn btn-outline-secondary btn-sm" title="Nomini o'zgartirish"
+              th:data-api-url="@{'/api/exams/' + ${exam.id}}" data-api-method="PUT"
+              data-prompt="Imtihonning yangi nomi" data-prompt-field="title" th:data-prompt-value="${exam.title}">
+        <i class="bi bi-pencil"></i></button>
+      <button class="btn btn-outline-danger btn-sm" title="Imtihonni o'chirish"
+              th:data-api-url="@{'/api/exams/' + ${exam.id}}" data-api-method="DELETE" th:data-redirect="@{/teacher/exams}"
+              data-confirm="Imtihon o'chirilsinmi? Uning barcha topshiriqlari, o'quvchilar javoblari va natijalari ham o'chadi.">
+        <i class="bi bi-trash"></i></button>
+      <a th:href="@{/teacher/exams}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i>Orqaga</a>
+    </div>
   </div>
   <div th:if="${exam.type.name() == 'PDF'}" class="card border-0 shadow-sm mb-4">
     <div class="card-header bg-white fw-semibold d-flex justify-content-between">
@@ -43,7 +53,6 @@
         </div>
       </div>
     </div>
-    <!-- exams/detail.html da, "Imtihon topshirish" cardidan keyin -->
     <div class="card border-0 shadow-sm mt-4" th:if="${!#lists.isEmpty(assignments)}">
       <div class="card-header bg-white fw-semibold">Topshirishlar</div>
       <div class="table-responsive">
@@ -52,15 +61,27 @@
           <tr><th>Guruh/O'quvchi</th><th>Muddat</th><th>Holat</th><th></th></tr>
           </thead>
           <tbody>
-          <tr th:each="a : ${assignments}" th:if="${a.exam.id == exam.id}">
-            <td th:text="${a.targetType == T(uz.vocabexam.entity.TargetType).GROUP ? a.group?.name : a.student?.fullName}"></td>
-            <td class="small text-muted" th:text="${a.deadline != null ? #temporals.format(a.deadline,'dd.MM.yyyy HH:mm') : 'Belgilanmagan'}"></td>
-            <td><span class="badge" th:classappend="${a.status.name() == 'ACTIVE'} ? 'bg-success' : 'bg-secondary'" th:text="${a.status}"></span></td>
+          <tr th:each="a : ${assignments}">
             <td>
+              <span th:if="${a.group != null}"><i class="bi bi-people me-1 text-muted"></i><span th:text="${a.group.name}"></span></span>
+              <span th:if="${a.group == null and a.student != null}"><i class="bi bi-person me-1 text-muted"></i><span th:text="${a.student.fullName}"></span></span>
+              <span th:if="${a.group == null and a.student == null}" class="text-muted">o'chirilgan</span>
+            </td>
+            <td class="small text-muted" th:text="${a.deadline != null ? #temporals.format(a.deadline,'dd.MM.yyyy HH:mm') : 'Belgilanmagan'}"></td>
+            <td><span class="badge" th:classappend="${a.status.name() == 'ACTIVE'} ? 'bg-success' : 'bg-secondary'" th:text="${a.status.label}"></span></td>
+            <td class="text-end text-nowrap">
               <a th:href="@{'/teacher/exams/' + ${a.id} + '/submissions'}"
                  class="btn btn-sm btn-outline-primary py-0">
                 <i class="bi bi-people me-1"></i>Topshirishlar
               </a>
+              <button th:if="${a.status.name() == 'ACTIVE'}" class="btn btn-sm btn-outline-secondary py-0" title="Bekor qilish"
+                      th:data-api-url="@{'/api/assignments/' + ${a.id} + '/cancel'}" data-api-method="PATCH"
+                      data-confirm="Topshiriq bekor qilinsinmi? O'quvchilar uni endi topshira olmaydi.">
+                <i class="bi bi-x-circle"></i></button>
+              <button class="btn btn-sm btn-outline-danger py-0" title="O'chirish"
+                      th:data-api-url="@{'/api/assignments/' + ${a.id}}" data-api-method="DELETE"
+                      data-confirm="Topshiriq o'chirilsinmi? Shu topshiriq bo'yicha javoblar va natijalar ham o'chadi.">
+                <i class="bi bi-trash"></i></button>
             </td>
           </tr>
           </tbody>
@@ -95,7 +116,7 @@
       if (!targetId) { alert('Guruh yoki o\'quvchini tanlang'); return; }
       const res = await fetch('/api/assignments',{method:'POST',headers:{'Content-Type':'application/json'},
         body:JSON.stringify({examId,targetType,targetId,deadline:deadline||null})});
-      if (res.ok) alert('Imtihon muvaffaqiyatli topshirildi!');
+      if (res.ok) { alert('Imtihon muvaffaqiyatli topshirildi!'); location.reload(); }
       else { const d = await res.json(); alert(d.message); }
     });
     loadTargets();

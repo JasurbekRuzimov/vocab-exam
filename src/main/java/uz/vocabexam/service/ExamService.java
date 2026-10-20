@@ -21,6 +21,7 @@ public class ExamService {
     private final UserRepository userRepository;
     private final PdfGeneratorService pdfGeneratorService;
     private final ExamAssignmentRepository assignmentRepository;
+    private final DataCleanupService cleanupService;
 
     public Page<Exam> getByTeacher(UUID teacherId, Pageable pageable) {
         return examRepository.findByTeacherIdOrderByCreatedAtDesc(teacherId, pageable);
@@ -96,12 +97,20 @@ public class ExamService {
         }
     }
 
+    /** Imtihon barcha topshiriqlari, javoblari va natijalari bilan birga o'chiriladi. */
     @Transactional
     public void delete(UUID id, UUID teacherId) {
+        checkOwnership(getById(id), teacherId);
+        cleanupService.purgeExamAssignments(id);
+        examRepository.delete(getById(id));
+    }
+
+    @Transactional
+    public Exam rename(UUID id, String title, UUID teacherId) {
         Exam exam = getById(id); checkOwnership(exam, teacherId);
-        if (assignmentRepository.existsByExamIdAndStatus(id, AssignmentStatus.ACTIVE))
-            throw new BadRequestException("Aktiv topshiriqlari bor imtihonni o'chirib bo'lmaydi");
-        examRepository.delete(exam);
+        if (title == null || title.isBlank()) throw new BadRequestException("Sarlavha bo'sh bo'lmasin");
+        exam.setTitle(title.trim());
+        return examRepository.save(exam);
     }
 
     public List<ExamVariant> getVariants(UUID examId) {

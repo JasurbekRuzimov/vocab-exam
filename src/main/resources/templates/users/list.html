@@ -45,7 +45,27 @@
               <span th:unless="${u.active}" class="badge bg-danger-subtle text-danger">Bloklangan</span>
             </td>
             <td class="small text-muted" th:text="${#temporals.format(u.createdAt,'dd.MM.yyyy')}"></td>
-            <td><a th:href="@{'/admin/users/' + ${u.id} + '/edit'}" class="btn btn-sm btn-outline-secondary py-0"><i class="bi bi-pencil"></i></a></td>
+            <td class="text-end text-nowrap" th:with="self=${u.id == #authentication.principal.id}">
+              <a th:href="@{'/admin/users/' + ${u.id} + '/edit'}" class="btn btn-sm btn-outline-secondary py-0" title="Tahrirlash"><i class="bi bi-pencil"></i></a>
+              <button class="btn btn-sm btn-outline-secondary py-0" title="Parolni tiklash"
+                      th:data-api-url="@{'/api/users/' + ${u.id} + '/reset-password'}" data-api-method="PATCH"
+                      th:data-prompt="${u.fullName} + ' uchun yangi parol (kamida 6 belgi)'" data-prompt-field="newPassword"
+                      data-success="Parol o'zgartirildi">
+                <i class="bi bi-key"></i></button>
+              <th:block th:unless="${self}">
+                <button th:if="${u.active}" class="btn btn-sm btn-outline-warning py-0" title="Bloklash"
+                        th:data-api-url="@{'/api/users/' + ${u.id} + '/block'}" data-api-method="PATCH"
+                        th:data-confirm="${u.fullName} + ' bloklansinmi? U tizimga kira olmaydi, ma\'lumotlari saqlanadi.'">
+                  <i class="bi bi-lock"></i></button>
+                <button th:unless="${u.active}" class="btn btn-sm btn-outline-success py-0" title="Blokdan chiqarish"
+                        th:data-api-url="@{'/api/users/' + ${u.id} + '/unblock'}" data-api-method="PATCH">
+                  <i class="bi bi-unlock"></i></button>
+                <button class="btn btn-sm btn-outline-danger py-0" title="O'chirish"
+                        th:data-api-url="@{'/api/users/' + ${u.id}}" data-api-method="DELETE"
+                        th:data-confirm="${u.fullName} + ' butunlay o\'chirilsinmi? O\'quvchi bo\'lsa, uning javoblari va natijalari ham o\'chadi. Bu amalni qaytarib bo\'lmaydi.'">
+                  <i class="bi bi-trash"></i></button>
+              </th:block>
+            </td>
           </tr>
           <tr th:if="${#lists.isEmpty(users)}">
             <td colspan="7" class="text-center text-muted py-4">Hech narsa topilmadi</td>
