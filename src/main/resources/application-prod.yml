@@ -1,0 +1,31 @@
+# Haqiqiy server uchun sozlamalar: SPRING_PROFILES_ACTIVE=prod bilan yoqiladi.
+# Ilova nginx ortida ishlaydi, nginx HTTPS ni o'zi hal qiladi.
+spring:
+  thymeleaf:
+    cache: true
+
+server:
+  # Faqat nginx orqali kirish: tashqaridan 8080 portga to'g'ridan-to'g'ri kirib bo'lmaydi
+  address: 127.0.0.1
+  # nginx yuborgan X-Forwarded-* sarlavhalari: haqiqiy IP (jurnal uchun) va https manzillar
+  forward-headers-strategy: native
+  compression:
+    enabled: true
+    mime-types: text/html,text/css,application/javascript,application/json
+  error:
+    include-stacktrace: never
+    include-message: never
+  servlet:
+    session:
+      cookie:
+        secure: true
+        http-only: true
+        same-site: lax
+
+logging:
+  file:
+    name: ${LOG_FILE:/var/log/vocabexam/app.log}
+  logback:
+    rollingpolicy:
+      max-file-size: 20MB
+      max-history: 14

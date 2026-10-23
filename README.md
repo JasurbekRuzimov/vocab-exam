@@ -28,6 +28,10 @@ Brauzerda: http://localhost:8080
 mvn spring-boot:run
 ```
 
+## Serverga chiqarish
+
+Haqiqiy serverda (nginx + HTTPS, systemd, kunlik zaxira) ishga tushirish: [docs/DEPLOY.md](docs/DEPLOY.md).
+
 ## Birinchi admin
 - **Login:** `ADMIN_USERNAME` (standart: `admin`)
 - **Parol:** `ADMIN_PASSWORD` muhit o'zgaruvchisi. Berilmasa, birinchi ishga tushishda
