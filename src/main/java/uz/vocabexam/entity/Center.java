@@ -17,7 +17,7 @@ public class Center {
     @Column(nullable = false)
     private String name;
 
-    /** Qisqa nom (lotin harflari): keyinchalik subdomen uchun, masalan ilm.vocabexam.uz. */
+    /** Qisqa nom (lotin harflari): keyinchalik subdomen uchun, masalan ilm.examaker.uz. */
     @Column(nullable = false, unique = true, length = 50)
     private String slug;
 

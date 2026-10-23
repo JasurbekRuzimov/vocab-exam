@@ -25,7 +25,7 @@ public class PdfGeneratorService {
     @Value("${app.pdf-dir:pdfs}")
     private String pdfDir;
 
-    @Value("${app.school-name:VocabExam}")
+    @Value("${app.school-name:Examaker}")
     private String schoolName;
 
     private static final float LINE_WIDTH = 450f;

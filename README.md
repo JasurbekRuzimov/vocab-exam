@@ -1,4 +1,6 @@
-# VocabExam — Ingliz tili o'quv markazi uchun Vocabulary Exam tizimi
+# Examaker — o'quv markazlari uchun shaffof imtihonlar
+
+Ingliz tili so'z imtihonlari: avtomatik tekshirish, jonli monitoring, ko'p markazli tizim. Sayt: [examaker.uz](https://examaker.uz)
 
 ## Texnologiyalar
 - Java 21, Spring Boot 3.3.0
@@ -27,6 +29,10 @@ Brauzerda: http://localhost:8080
 # PostgreSQL 17 o'rnatilgan bo'lishi kerak
 mvn spring-boot:run
 ```
+
+## Serverga chiqarish
+
+Haqiqiy serverda (nginx + HTTPS, systemd, kunlik zaxira) ishga tushirish: [docs/DEPLOY.md](docs/DEPLOY.md).
 
 ## Birinchi admin
 - **Login:** `ADMIN_USERNAME` (standart: `admin`)
