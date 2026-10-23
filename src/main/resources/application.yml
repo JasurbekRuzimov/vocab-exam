@@ -38,7 +38,7 @@ server:
 app:
   upload-dir: ${UPLOAD_DIR:uploads}
   pdf-dir: ${PDF_DIR:pdfs}
-  school-name: ${SCHOOL_NAME:VocabExam O'quv Markazi}
+  school-name: ${SCHOOL_NAME:Examaker}
   # Birinchi ishga tushirishda yaratiladigan admin. ADMIN_PASSWORD berilmasa,
   # tasodifiy parol yaratiladi va logga BIR MARTA chiqariladi.
   admin:

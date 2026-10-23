@@ -12,9 +12,9 @@
   </parent>
 
   <groupId>uz.vocabexam</groupId>
-  <artifactId>vocabexam</artifactId>
+  <artifactId>examaker</artifactId>
   <version>1.0.0</version>
-  <name>VocabExam</name>
+  <name>Examaker</name>
   <description>Ingliz tili o'quv markazi — Vocabulary Exam tizimi</description>
 
   <properties>

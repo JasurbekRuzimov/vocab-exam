@@ -1,4 +1,4 @@
-# VocabExam'ni serverga chiqarish
+# Examaker'ni serverga chiqarish
 
 Bu yo'riqnoma ilovani Docker'siz, Ubuntu serverda **nginx + HTTPS** ortida ishga tushiradi.
 Kerakli fayllar `deploy/` papkasida tayyor turibdi.
@@ -12,7 +12,7 @@ Internet ──HTTPS──▶ nginx (443) ──▶ Spring Boot (127.0.0.1:8080)
 | | Tavsiya |
 |---|---|
 | Server (VPS) | Ubuntu 24.04, 2 vCPU, 2–4 GB RAM, 40 GB disk |
-| Domen | masalan `vocabexam.uz` (istalgan .uz registratori) |
+| Domen | `examaker.uz` (olingan) |
 | Vaqt | birinchi marta ~1 soat |
 
 > **Muhim (O'zbekiston qonunchiligi).** "Shaxsga doir ma'lumotlar to'g'risida"gi qonunga ko'ra
@@ -32,8 +32,8 @@ sudo ufw allow OpenSSH && sudo ufw allow 'Nginx Full' && sudo ufw enable
 
 ```bash
 sudo -u postgres psql <<'SQL'
-CREATE USER vocabexam WITH PASSWORD 'KUCHLI-PAROL';
-CREATE DATABASE vocab_exam OWNER vocabexam;
+CREATE USER examaker WITH PASSWORD 'KUCHLI-PAROL';
+CREATE DATABASE examaker OWNER examaker;
 SQL
 ```
 
@@ -42,9 +42,9 @@ Jadvallarni ilova birinchi ishga tushganda o'zi yaratadi (Flyway).
 ## 3. Ilova uchun foydalanuvchi va papkalar
 
 ```bash
-sudo useradd --system --home /opt/vocabexam --shell /usr/sbin/nologin vocabexam
-sudo mkdir -p /opt/vocabexam/uploads /opt/vocabexam/pdfs /var/log/vocabexam /etc/vocabexam
-sudo chown -R vocabexam:vocabexam /opt/vocabexam /var/log/vocabexam
+sudo useradd --system --home /opt/examaker --shell /usr/sbin/nologin examaker
+sudo mkdir -p /opt/examaker/uploads /opt/examaker/pdfs /var/log/examaker /etc/examaker
+sudo chown -R examaker:examaker /opt/examaker /var/log/examaker
 ```
 
 ## 4. Kodni olish va yig'ish
@@ -52,16 +52,16 @@ sudo chown -R vocabexam:vocabexam /opt/vocabexam /var/log/vocabexam
 ```bash
 cd /srv && sudo git clone https://github.com/JasurbekRuzimov/vocab-exam.git && cd vocab-exam
 sudo mvn -B package -DskipTests
-sudo cp target/vocabexam-1.0.0.jar /opt/vocabexam/vocabexam.jar
-sudo chown vocabexam:vocabexam /opt/vocabexam/vocabexam.jar
+sudo cp target/examaker-1.0.0.jar /opt/examaker/examaker.jar
+sudo chown examaker:examaker /opt/examaker/examaker.jar
 ```
 
 ## 5. Maxfiy sozlamalar
 
 ```bash
-sudo cp deploy/vocabexam.env.example /etc/vocabexam/vocabexam.env
-sudo nano /etc/vocabexam/vocabexam.env     # DB_PASSWORD va ADMIN_PASSWORD ni yozing
-sudo chmod 600 /etc/vocabexam/vocabexam.env
+sudo cp deploy/examaker.env.example /etc/examaker/examaker.env
+sudo nano /etc/examaker/examaker.env     # DB_PASSWORD va ADMIN_PASSWORD ni yozing
+sudo chmod 600 /etc/examaker/examaker.env
 ```
 
 `SPRING_PROFILES_ACTIVE=prod` yoqilgan bo'ladi. Bu profil shablonlarni keshlaydi, cookie'larni
@@ -70,11 +70,11 @@ faqat HTTPS orqali yuboradi va ilovani faqat `127.0.0.1` da tinglatadi (tashqari
 ## 6. Ilovani xizmat sifatida ishga tushirish
 
 ```bash
-sudo cp deploy/vocabexam.service /etc/systemd/system/
+sudo cp deploy/examaker.service /etc/systemd/system/
 sudo systemctl daemon-reload
-sudo systemctl enable --now vocabexam
-sudo systemctl status vocabexam          # "active (running)" bo'lishi kerak
-sudo tail -f /var/log/vocabexam/app.log  # "Started VocabExamApplication" chiqishini kuting
+sudo systemctl enable --now examaker
+sudo systemctl status examaker          # "active (running)" bo'lishi kerak
+sudo tail -f /var/log/examaker/app.log  # "Started VocabExamApplication" chiqishini kuting
 ```
 
 Server qayta yoqilganda ilova o'zi ishga tushadi, yiqilsa 10 soniyada qayta ko'tariladi.
@@ -88,37 +88,36 @@ Domen registratorining DNS bo'limida ikkita **A** yozuv qo'shing:
 | `@` | A | server IP manzili |
 | `www` | A | server IP manzili |
 
-DNS 5 daqiqadan bir necha soatgacha tarqaladi. Tekshirish: `ping vocabexam.uz`.
+DNS 5 daqiqadan bir necha soatgacha tarqaladi. Tekshirish: `ping examaker.uz`.
 
 ## 8. nginx va bepul HTTPS sertifikati
 
 ```bash
-sudo cp deploy/nginx-vocabexam.conf /etc/nginx/sites-available/vocabexam
-sudo sed -i 's/DOMEN.UZ/vocabexam.uz/g' /etc/nginx/sites-available/vocabexam   # o'z domeningiz
-sudo ln -s /etc/nginx/sites-available/vocabexam /etc/nginx/sites-enabled/
+sudo cp deploy/nginx-examaker.conf /etc/nginx/sites-available/examaker
+sudo ln -s /etc/nginx/sites-available/examaker /etc/nginx/sites-enabled/
 sudo rm -f /etc/nginx/sites-enabled/default
 sudo nginx -t && sudo systemctl reload nginx
-sudo certbot --nginx -d vocabexam.uz -d www.vocabexam.uz   # HTTP→HTTPS yo'naltirishni tanlang
+sudo certbot --nginx -d examaker.uz -d www.examaker.uz   # HTTP→HTTPS yo'naltirishni tanlang
 ```
 
 Sertifikat har 90 kunda avtomatik yangilanadi.
 
 ## 9. Birinchi kirish
 
-1. `https://vocabexam.uz` ni oching, `admin` va `ADMIN_PASSWORD` bilan kiring.
+1. `https://examaker.uz` ni oching, `admin` va `ADMIN_PASSWORD` bilan kiring.
 2. **Markazlar** bo'limida birinchi o'quv markazini va uning direktorini yarating.
 3. Direktor o'qituvchi va o'quvchilarni qo'shadi.
 
 ## 10. Kunlik zaxira nusxa
 
 ```bash
-sudo mkdir -p /var/backups/vocabexam && sudo chown postgres /var/backups/vocabexam
-sudo cp deploy/backup.sh /opt/vocabexam/backup.sh && sudo chmod +x /opt/vocabexam/backup.sh
-echo "0 3 * * * postgres /opt/vocabexam/backup.sh" | sudo tee /etc/cron.d/vocabexam-backup
+sudo mkdir -p /var/backups/examaker && sudo chown postgres /var/backups/examaker
+sudo cp deploy/backup.sh /opt/examaker/backup.sh && sudo chmod +x /opt/examaker/backup.sh
+echo "0 3 * * * postgres /opt/examaker/backup.sh" | sudo tee /etc/cron.d/examaker-backup
 ```
 
 Har kuni soat 03:00 da nusxa olinadi, 14 kundan eskilari o'chadi. Vaqti-vaqti bilan nusxalarni
-boshqa joyga ham ko'chirib turing. Tiklash: `sudo -u postgres pg_restore -d vocab_exam --clean FAYL.dump`.
+boshqa joyga ham ko'chirib turing. Tiklash: `sudo -u postgres pg_restore -d examaker --clean FAYL.dump`.
 
 ## 11. Yangi versiyani chiqarish
 
@@ -133,10 +132,10 @@ Yangi baza o'zgarishlari (migratsiyalar) avtomatik qo'llanadi.
 
 | Belgi | Nima qilish kerak |
 |---|---|
-| Sayt ochilmaydi (502) | `sudo systemctl status vocabexam` va `/var/log/vocabexam/app.log` ni ko'ring |
+| Sayt ochilmaydi (502) | `sudo systemctl status examaker` va `/var/log/examaker/app.log` ni ko'ring |
 | Login qilgach yana login sahifasi chiqadi | Sayt `https://` orqali ochilganini tekshiring: prod profilda cookie faqat HTTPS bilan ishlaydi |
 | Fayl yuklashda 413 xato | nginx'dagi `client_max_body_size` ni oshiring |
-| Bazaga ulanmaydi | `/etc/vocabexam/vocabexam.env` dagi `DB_PASSWORD` 2-qadamdagi parol bilan bir xilmi |
+| Bazaga ulanmaydi | `/etc/examaker/examaker.env` dagi `DB_PASSWORD` 2-qadamdagi parol bilan bir xilmi |
 
 ## Sotuvdan oldin
 

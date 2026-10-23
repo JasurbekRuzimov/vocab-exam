@@ -24,7 +24,7 @@ server:
 
 logging:
   file:
-    name: ${LOG_FILE:/var/log/vocabexam/app.log}
+    name: ${LOG_FILE:/var/log/examaker/app.log}
   logback:
     rollingpolicy:
       max-file-size: 20MB

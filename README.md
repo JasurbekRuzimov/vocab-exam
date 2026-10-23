@@ -1,4 +1,6 @@
-# VocabExam — Ingliz tili o'quv markazi uchun Vocabulary Exam tizimi
+# Examaker — o'quv markazlari uchun shaffof imtihonlar
+
+Ingliz tili so'z imtihonlari: avtomatik tekshirish, jonli monitoring, ko'p markazli tizim. Sayt: [examaker.uz](https://examaker.uz)
 
 ## Texnologiyalar
 - Java 21, Spring Boot 3.3.0

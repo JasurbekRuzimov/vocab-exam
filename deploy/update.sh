@@ -4,7 +4,7 @@
 set -e
 git pull --ff-only
 mvn -B -q package -DskipTests
-cp target/vocabexam-1.0.0.jar /opt/vocabexam/vocabexam.jar
-chown vocabexam:vocabexam /opt/vocabexam/vocabexam.jar
-systemctl restart vocabexam
-echo "Yangilandi. Holat: sudo systemctl status vocabexam"
+cp target/examaker-1.0.0.jar /opt/examaker/examaker.jar
+chown examaker:examaker /opt/examaker/examaker.jar
+systemctl restart examaker
+echo "Yangilandi. Holat: sudo systemctl status examaker"
